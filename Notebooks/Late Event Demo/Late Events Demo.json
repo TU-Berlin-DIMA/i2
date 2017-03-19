@@ -1,0 +1,1071 @@
+{  
+   "paragraphs":[  
+      {  
+         "text":"%angular\n<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"inputBox\", // replace with your element name\n    \"<form ng-submit='test()'>\" +\n    \"<input type='number' ng-model='timestemp' min='1' name='timestemp' /> <input type='number' ng-model='value' name='number' />   <input type='submit' id='submit' value='Submit' />  <pre>{{valueDisplay}}</pre></form>\",\n    function(scope,element){\n      scope.bgval = 1+\",\"+2;\n      scope.test = function() {\n        scope.valueDisplay = \"ts:\"+scope.timestemp + \" - \" + \"value:\"+scope.value;\n        scope.bgval = scope.timestemp+\",\"+scope.value;\n        console.log(\"send \"+ scope.bgval)\n      };\n    }\n    \n)\n</script>\n",
+         "dateUpdated":"2017-03-11T12:23:32+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914886_-2078405556",
+         "id":"20170310-155333_1128080085",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"inputBox\", // replace with your element name\n    \"<form ng-submit='test()'>\" +\n    \"<input type='number' ng-model='timestemp' min='1' name='timestemp' /> <input type='number' ng-model='value' name='number' />   <input type='submit' id='submit' value='Submit' />  <pre>{{valueDisplay}}</pre></form>\",\n    function(scope,element){\n      scope.bgval = 1+\",\"+2;\n      scope.test = function() {\n        scope.valueDisplay = \"ts:\"+scope.timestemp + \" - \" + \"value:\"+scope.value;\n        scope.bgval = scope.timestemp+\",\"+scope.value;\n        console.log(\"send \"+ scope.bgval)\n      };\n    }\n    \n)\n</script>"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:32+0000",
+         "dateFinished":"2017-03-11T12:23:32+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:159"
+      },
+      {  
+         "text":"%angular\n<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"valuegenerator\", // replace with your element name\n    \"<pre>{{valueDisplay}}</pre> <input ng-click='click()' type='submit' value='stop/start' /> \",\n    function(scope,element){\n      scope.timestemp=0;\n      scope.value=0;\n      scope.click = function(){\n         if(scope.stop==undefined){\n             scope.start();\n         } else{\n            clearInterval(scope.stop);\n             scope.stop=undefined;\n         }\n      }\n      scope.start = function(){\n        scope.stop = setInterval(function(){\n           scope.timestemp++;\n           scope.value=Math.floor(Math.random() * 10);\n           scope.valueDisplay = \"ts:\"+scope.timestemp + \" - \" + \"value:\"+scope.value;\n           scope.bgval = scope.timestemp+\",\"+scope.value;\n           scope.$apply()\n        },1000)\n      }\n    }\n    \n)\n</script>\n",
+         "dateUpdated":"2017-03-11T12:23:32+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/html",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914889_-2081098798",
+         "id":"20170310-163558_826490933",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"valuegenerator\", // replace with your element name\n    \"<pre>{{valueDisplay}}</pre> <input ng-click='click()' type='submit' value='stop/start' /> \",\n    function(scope,element){\n      scope.timestemp=0;\n      scope.value=0;\n      scope.click = function(){\n         if(scope.stop==undefined){\n             scope.start();\n         } else{\n            clearInterval(scope.stop);\n             scope.stop=undefined;\n         }\n      }\n      scope.start = function(){\n        scope.stop = setInterval(function(){\n           scope.timestemp++;\n           scope.value=Math.floor(Math.random() * 10);\n           scope.valueDisplay = \"ts:\"+scope.timestemp + \" - \" + \"value:\"+scope.value;\n           scope.bgval = scope.timestemp+\",\"+scope.value;\n           scope.$apply()\n        },1000)\n      }\n    }\n    \n)\n</script>"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:32+0000",
+         "dateFinished":"2017-03-11T12:23:32+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:160"
+      },
+      {  
+         "text":"%angular\n<style>\n.highlight{\n    background-color:#a9c8ff;\n}\n</style>\n<script>\n\nzeppelin.addComponent(\n    \"list\", // replace with your element name\n    \"<div ng-repeat='item in getContent() track by item.time'  ><pre ng-class='[{highlight: item.highlight}]'>{{ item.highlight}}-{{$index}}. {{item.time}}- {{item.value}}</pre></div>\",\n    function(scope,element){\n      var content=[]\n      \n      scope.getContent = function(){\n          return content;\n      }\n      \n      function addItem(time,value){\n          if(content.length>20){\n              content.pop();\n          }\n          var firstItem = content[0];\n          if(firstItem==undefined || firstItem.time<time){\n               console.log(time +\"add\" + value)\n               content.splice(0, 0, {\"time\":time,\"value\":value,\"highlight\":false});\n          }else{\n              console.log(time +\"update\" + value)\n              var foundItem = content.find(function(item){return item.time==time})\n              if(foundItem != undefined){\n                  foundItem.value = value;\n                  foundItem.highlight=true;\n              }\n          }\n      }\n      \n      var remove = scope.$watch('point', function(newPoint, oldValue) {\n         \n          if(newPoint!=undefined){\n             var split = newPoint.split(\",\"); \n             addItem(parseInt(split[0]),parseInt(split[1]));\n          }\n            \n      });\n        \n        scope.$on('clean', function() {\n            remove()\n        });\n      \n      \n    }\n    \n)\n</script>",
+         "dateUpdated":"2017-03-11T12:23:32+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/html",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914889_-2081098798",
+         "id":"20170310-165314_1389101973",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n.highlight{\n    background-color:#a9c8ff;\n}\n</style>\n<script>\n\nzeppelin.addComponent(\n    \"list\", // replace with your element name\n    \"<div ng-repeat='item in getContent() track by item.time'  ><pre ng-class='[{highlight: item.highlight}]'>{{ item.highlight}}-{{$index}}. {{item.time}}- {{item.value}}</pre></div>\",\n    function(scope,element){\n      var content=[]\n      \n      scope.getContent = function(){\n          return content;\n      }\n      \n      function addItem(time,value){\n          if(content.length>20){\n              content.pop();\n          }\n          var firstItem = content[0];\n          if(firstItem==undefined || firstItem.time<time){\n               console.log(time +\"add\" + value)\n               content.splice(0, 0, {\"time\":time,\"value\":value,\"highlight\":false});\n          }else{\n              console.log(time +\"update\" + value)\n              var foundItem = content.find(function(item){return item.time==time})\n              if(foundItem != undefined){\n                  foundItem.value = value;\n                  foundItem.highlight=true;\n              }\n          }\n      }\n      \n      var remove = scope.$watch('point', function(newPoint, oldValue) {\n         \n          if(newPoint!=undefined){\n             var split = newPoint.split(\",\"); \n             addItem(parseInt(split[0]),parseInt(split[1]));\n          }\n            \n      });\n        \n        scope.$on('clean', function() {\n            remove()\n        });\n      \n      \n    }\n    \n)\n</script>"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:32+0000",
+         "dateFinished":"2017-03-11T12:23:32+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:161"
+      },
+      {  
+         "text":"%flink \nimport scala.collection.JavaConverters._\nimport org.apache.zeppelin.flink.ui._;\nclass ListViewUi() extends UIComponent[String,Any](classOf[Any]) {\n\n   scope.remove(\"point\")\n\n   override def invoke(dataItem:String) = {\n     scope.put(\"point\" , dataItem);\n   }\n   \n   def getTemplate(): String = {\n       \"<list></list>\"\n   }\n}\n\nclass InputBox() extends UIComponent[Any,String](classOf[String]) {\n    \n   scope.remove(\"bgval\")\n\n   scope.put(\"bgval\", \"1,2\")\n   scope.watch(\"bgval\",(_:String,newValue:String)=>{\n        addMessageToOutputStream(newValue)\n    })\n   \n   def getTemplate(): String = {\n    \"<input-box></input-box>\";\n   }\n}\n\nclass Valuegenerator() extends UIComponent[Any,String](classOf[String]) {\n   scope.remove(\"bgval\")\n   scope.put(\"bgval\", \"1,2\")\n   scope.watch(\"bgval\",(_:String,newValue:String)=>{\n        addMessageToOutputStream(newValue)\n    })\n   \n   def getTemplate(): String = {\n    \"<valuegenerator><valuegenerator>\";\n   }\n}",
+         "dateUpdated":"2017-03-11T12:23:32+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914890_-2079944552",
+         "id":"20170310-160153_1128916588",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import scala.collection.JavaConverters._\nimport org.apache.zeppelin.flink.ui._\ndefined class ListViewUi\ndefined class InputBox\ndefined class Valuegenerator\n"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:33+0000",
+         "dateFinished":"2017-03-11T12:23:35+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:162"
+      },
+      {  
+         "text":"%flink\nvar vg = new Valuegenerator();\n",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/html",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914890_-2079944552",
+         "id":"20170310-172910_201959878",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<valuegenerator><valuegenerator>\n"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:33+0000",
+         "dateFinished":"2017-03-11T12:23:35+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:163"
+      },
+      {  
+         "text":"%flink \nvar ib = new InputBox();",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914890_-2079944552",
+         "id":"20170310-173556_1892758212",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<input-box></input-box>\n"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:35+0000",
+         "dateFinished":"2017-03-11T12:23:36+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:164"
+      },
+      {  
+         "text":"%flink \nval listView = new ListViewUi()",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489234840250_960348882",
+         "id":"20170311-122040_117438998",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<list></list>\n"
+         },
+         "dateCreated":"2017-03-11T12:20:40+0000",
+         "dateStarted":"2017-03-11T12:23:36+0000",
+         "dateFinished":"2017-03-11T12:23:36+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:165"
+      },
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\n\nval vgStream = senv.addSource(vg.getOutputStreamSource)\n                                    .name(\"Valuegenerator\");\nval ibStream = senv.addSource(ib.getOutputStreamSource)\n                                    .name(\"InputStream\");\nvar itemStream = vgStream.union(ibStream);\n\n\nsenv.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);\n\n\n// Assign Event timestemp\nclass TimestampAssigner extends AssignerWithPunctuatedWatermarks[(Int,Int,Int)](){\n\n    def\textractTimestamp(element:(Int,Int,Int), previousElementTimestamp:Long):Long = {\n        element._2*1000;\n    }\n    \n    def  checkAndGetNextWatermark( lastElement: (Int,Int,Int),  extractedTimestamp: Long): Watermark = {\n\t\treturn new Watermark(extractedTimestamp);\n    }\n}\n  \nvar windowedStream = itemStream\n    .map(str=>{\n        var split = str.split(\",\")\n        (1,split(0).toInt,split(1).toInt)\n    })\n    .setParallelism(1)\n    .assignTimestampsAndWatermarks(new TimestampAssigner())\n    .keyBy(0)\n    .timeWindow(Time.seconds(10))\n    .allowedLateness(Time.minutes(2))\n    .reduce((left,right)=>(1,Math.min(left._2,right._2),left._3+right._3))\n    .map(item=> item._2+\",\"+item._3)\n\n\nwindowedStream.addSink(listView.getSink())\n",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914891_-2080329301",
+         "id":"20170310-160024_68965921",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\nvgStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@75910a75\nibStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@57029ca6\nitemStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@35181aba\ndefined class TimestampAssigner\nwindowedStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@6e1900e\nres105: org.apache.flink.streaming.api.datastream.DataStreamSink[String] = org.apache.flink.streaming.api.datastream.DataStreamSink@11902c1c\n"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:36+0000",
+         "dateFinished":"2017-03-11T12:23:39+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:166"
+      },
+      {  
+         "text":"%flink \n// execute Flink Job.\n// This is a blocking call, so it can make sense to palce it in an own paragraph. \nsenv.execute() ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914891_-2080329301",
+         "id":"20170310-164737_1448875141",
+         "result":{  
+            "code":"ERROR",
+            "type":"TEXT",
+            "msg":"Submitting job with JobID: d1d89de5b4f89e7004ebabb29e0bb15e. Waiting for job completion.\n03/11/2017 12:23:46\tJob execution switched to status RUNNING.\n03/11/2017 12:23:46\tSource: Valuegenerator(1/1) switched to SCHEDULED \n03/11/2017 12:23:46\tSource: Valuegenerator(1/1) switched to DEPLOYING \n03/11/2017 12:23:46\tSource: InputStream(1/1) switched to SCHEDULED \n03/11/2017 12:23:46\tSource: InputStream(1/1) switched to DEPLOYING \n03/11/2017 12:23:46\tMap -> Timestamps/Watermarks(1/1) switched to SCHEDULED \n03/11/2017 12:23:46\tMap -> Timestamps/Watermarks(1/1) switched to DEPLOYING \n03/11/2017 12:23:46\tTriggerWindow(TumblingEventTimeWindows(10000), ReducingStateDescriptor{serializer=$line625.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$65ff2ee844d9da4276e41a5f86d6fd0$$$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@47cd4b90, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@771da9eb}, EventTimeTrigger(), WindowedStream.apply(WindowedStream.java:347)) -> Map -> Sink: Unnamed(1/1) switched to SCHEDULED \n03/11/2017 12:23:46\tTriggerWindow(TumblingEventTimeWindows(10000), ReducingStateDescriptor{serializer=$line625.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$65ff2ee844d9da4276e41a5f86d6fd0$$$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@47cd4b90, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@771da9eb}, EventTimeTrigger(), WindowedStream.apply(WindowedStream.java:347)) -> Map -> Sink: Unnamed(1/1) switched to DEPLOYING \n03/11/2017 12:23:46\tMap -> Timestamps/Watermarks(1/1) switched to RUNNING \n03/11/2017 12:23:46\tTriggerWindow(TumblingEventTimeWindows(10000), ReducingStateDescriptor{serializer=$line625.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$65ff2ee844d9da4276e41a5f86d6fd0$$$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@47cd4b90, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@771da9eb}, EventTimeTrigger(), WindowedStream.apply(WindowedStream.java:347)) -> Map -> Sink: Unnamed(1/1) switched to RUNNING \n03/11/2017 12:23:46\tSource: InputStream(1/1) switched to RUNNING \n03/11/2017 12:23:46\tSource: Valuegenerator(1/1) switched to RUNNING \n03/11/2017 12:24:51\tJob execution switched to status CANCELLING.\n03/11/2017 12:24:51\tSource: Valuegenerator(1/1) switched to CANCELING \n03/11/2017 12:24:51\tSource: InputStream(1/1) switched to CANCELING \n03/11/2017 12:24:51\tMap -> Timestamps/Watermarks(1/1) switched to CANCELING \n03/11/2017 12:24:51\tTriggerWindow(TumblingEventTimeWindows(10000), ReducingStateDescriptor{serializer=$line625.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$65ff2ee844d9da4276e41a5f86d6fd0$$$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@47cd4b90, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@771da9eb}, EventTimeTrigger(), WindowedStream.apply(WindowedStream.java:347)) -> Map -> Sink: Unnamed(1/1) switched to CANCELING \n03/11/2017 12:24:51\tSource: Valuegenerator(1/1) switched to CANCELED \n03/11/2017 12:24:51\tSource: InputStream(1/1) switched to CANCELED \n03/11/2017 12:24:51\tTriggerWindow(TumblingEventTimeWindows(10000), ReducingStateDescriptor{serializer=$line625.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$65ff2ee844d9da4276e41a5f86d6fd0$$$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@47cd4b90, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@771da9eb}, EventTimeTrigger(), WindowedStream.apply(WindowedStream.java:347)) -> Map -> Sink: Unnamed(1/1) switched to CANCELED \n03/11/2017 12:24:51\tMap -> Timestamps/Watermarks(1/1) switched to CANCELED \n03/11/2017 12:24:51\tJob execution switched to status CANCELED.\norg.apache.flink.client.program.ProgramInvocationException: The program execution failed: Job was cancelled.\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:413)\n\tat org.apache.flink.client.program.StandaloneClusterClient.submitJob(StandaloneClusterClient.java:92)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:389)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:381)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.executeRemotely(RemoteStreamEnvironment.java:209)\n\tat org.apache.flink.api.java.ScalaShellRemoteStreamEnvironment.executeRemotely(ScalaShellRemoteStreamEnvironment.java:87)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.execute(RemoteStreamEnvironment.java:173)\n\tat org.apache.flink.streaming.api.environment.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.java:1429)\n\tat org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.scala:576)\n\tat $$$$65ff2ee844d9da4276e41a5f86d6fd0$$$.<init>(<console>:137)\n\tat $$$$65ff2ee844d9da4276e41a5f86d6fd0$$$.<clinit>(<console>)\n\tat .<init>(<console>:7)\n\tat .<clinit>(<console>)\n\tat $print(<console>)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat scala.tools.nsc.interpreter.IMain$ReadEvalPrint.call(IMain.scala:734)\n\tat scala.tools.nsc.interpreter.IMain$Request.loadAndRun(IMain.scala:983)\n\tat scala.tools.nsc.interpreter.IMain.loadAndRunReq$1(IMain.scala:573)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:604)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:568)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:305)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:301)\n\tat scala.util.DynamicVariable.withValue(DynamicVariable.scala:57)\n\tat scala.Console$.withOut(Console.scala:107)\n\tat scala.Console.withOut(Console.scala)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:299)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:244)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:94)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:341)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:176)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler$1.run(FIFOScheduler.java:139)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:745)\nCaused by: org.apache.flink.runtime.client.JobCancellationException: Job was cancelled.\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply$mcV$sp(JobManager.scala:814)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.liftedTree1$1(Future.scala:24)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.run(Future.scala:24)\n\tat akka.dispatch.TaskInvocation.run(AbstractDispatcher.scala:41)\n\tat akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask.exec(AbstractDispatcher.scala:401)\n\tat scala.concurrent.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.pollAndExecAll(ForkJoinPool.java:1253)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1346)\n\tat scala.concurrent.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)\n\tat scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)\n\n"
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:37+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"ERROR",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:167"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914891_-2080329301",
+         "id":"20170310-173814_1334042021",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:23:39+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:168"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914892_-2082253045",
+         "id":"20170310-174152_1603020766",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:169"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914892_-2082253045",
+         "id":"20170310-174325_546437187",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:170"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914892_-2082253045",
+         "id":"20170310-174554_335975140",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:171"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914893_-2082637794",
+         "id":"20170310-175806_46961461",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:172"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914893_-2082637794",
+         "id":"20170310-180945_860901647",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:173"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:33+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230914893_-2082637794",
+         "id":"20170310-181627_1256810242",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:14+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:174"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:34+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489230927294_705268060",
+         "id":"20170311-111527_1569662437",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:15:27+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:175"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:34+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489231383946_479897150",
+         "id":"20170311-112303_1292188740",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:23:03+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:176"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:34+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489231667378_1338285626",
+         "id":"20170311-112747_1702959639",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T11:27:47+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:177"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:34+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489234747282_-218839743",
+         "id":"20170311-121907_1242920063",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-11T12:19:07+0000",
+         "dateStarted":"2017-03-11T12:24:52+0000",
+         "dateFinished":"2017-03-11T12:24:52+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:178"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-11T12:23:34+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489235014226_2000587315",
+         "id":"20170311-122334_1772682277",
+         "dateCreated":"2017-03-11T12:23:34+0000",
+         "status":"READY",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:179"
+      }
+   ],
+   "name":"Late Events Demo",
+   "id":"2CBEGB45M",
+   "lastReplName":{  
+      "value":"flink"
+   },
+   "angularObjects":{  
+      "2CCZ7V9RC:shared_process":[  
+
+      ],
+      "2CBMSAB18:shared_process":[  
+         {  
+            "name":"point",
+            "object":"10,228",
+            "noteId":"2CBEGB45M",
+            "paragraphId":"20170310-160024_68965921"
+         },
+         {  
+            "name":"point",
+            "object":"50,36",
+            "noteId":"2CBEGB45M",
+            "paragraphId":"20170311-122040_117438998"
+         },
+         {  
+            "name":"bgval",
+            "object":"71,6",
+            "noteId":"2CBEGB45M",
+            "paragraphId":"20170310-172910_201959878"
+         },
+         {  
+            "name":"bgval",
+            "object":"10,2",
+            "noteId":"2CBEGB45M",
+            "paragraphId":"20170310-173556_1892758212"
+         }
+      ],
+      "2CCSRKAHT:shared_process":[  
+
+      ],
+      "2CCBYAZEC:shared_process":[  
+
+      ],
+      "2CAQ11TT5:shared_process":[  
+
+      ],
+      "2CAHTU896:shared_process":[  
+
+      ],
+      "2CAVWA7JW:shared_process":[  
+
+      ],
+      "2CBB5Y87P:shared_process":[  
+
+      ],
+      "2CAJTCY1K:shared_process":[  
+
+      ],
+      "2CC8BHQ2Z:shared_process":[  
+
+      ],
+      "2CBTNR89U:shared_process":[  
+
+      ],
+      "2CD7ZFQVU:shared_process":[  
+
+      ],
+      "2CD2PVUCS:shared_process":[  
+
+      ],
+      "2CCQQQJSC:shared_process":[  
+
+      ],
+      "2CCEZJ1K2:shared_process":[  
+
+      ],
+      "2CDGXG1P9:shared_process":[  
+
+      ],
+      "2CDEKZ3T3:shared_process":[  
+
+      ]
+   },
+   "config":{  
+      "looknfeel":"default"
+   },
+   "info":{  
+
+   }
+}

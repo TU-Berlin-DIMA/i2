@@ -1,0 +1,898 @@
+{  
+   "paragraphs":[  
+      {  
+         "text":"%md\nThis Demo contains an interactive Line Chart, which display stream data and can adjust aggregation properties in the flink job.\n\n#### Load datasource into a flink datastream:",
+         "dateUpdated":"2016-11-21T15:45:10+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/html",
+            "editorHide":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933017731_-566328291",
+         "id":"20161031-175657_558467452",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<p>This Demo contains an interactive Line Chart, which display stream data and can adjust aggregation properties in the flink job.</p>\n<h4>Load datasource into a flink datastream:</h4>\n"
+         },
+         "dateCreated":"2016-10-31T17:56:57+0100",
+         "dateStarted":"2016-11-21T15:45:10+0100",
+         "dateFinished":"2016-11-21T15:45:10+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1684"
+      },
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.functions.source._;\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext;\nimport scala.io.Source\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\n\nclass FileSource extends RichSourceFunction[String]() with StoppableFunction{\n    var startSystemTime = System.nanoTime();\n    var startDataTime = 10753295594424116L;\n    var stoped = false;\n    \n    def shiftIterator(fileIterator : Iterator[String] ): Unit = {\n        \n        var line = fileIterator.next()\n        var lineDataTimestamp = line.split(\",\")(1).toLong;\n        \n        while(lineDataTimestamp<=startDataTime){\n            line = fileIterator.next()\n            lineDataTimestamp = line.split(\",\")(1).toLong;\n        }\n    }\n    \n    def run(sc: SourceContext[String]): Unit = {\n        var fileIterator = scala.tools.nsc.io.File(\"debs2013.data\").lines();\n        \n        shiftIterator(fileIterator) \n        startSystemTime = System.nanoTime();\n        \n        for(line <-scala.tools.nsc.io.File(\"debs2013.data\").lines()){\n            \n            if(Thread.interrupted() || stoped){\n                return\n            }\n            var dataTimestamp = line.split(\",\")(1).toLong;\n            if(dataTimestamp > startDataTime){\n                var elapsedSystemTime = System.nanoTime() - startSystemTime;\n                var elapsedDataTime = (dataTimestamp - startDataTime) / 1000; // picoseconds to nanoseconds\n                while(elapsedDataTime > elapsedSystemTime && !Thread.interrupted()){\n                    elapsedSystemTime = System.nanoTime() - startSystemTime;\n                    // active waiting for time\n                } \n                sc.collect(line);\n            }\n        }\n    }\n    \n    def stop() : Unit= {\n        stoped = true \n    }\n    \n    def cancel() : Unit= {\n        stoped = true \n    }\n\n}\n\nvar fs = new FileSource()\n\n\n/**\n * sid, ts, \n * x, y, z, \n * |v| in μm/s,\n * |a| is zero when the ball is at a fixed position and not 9.81 m/s²).\n * vx, vy, vz, describe direction by a vector with size of 10,000\n * ax, ay, az\n * \n * \n * Hence, the speed of the object in x-direction in SI-units (m/s) is calculated by \n *          v'x = |v| * vx * 1e-4 * 1e-6\n * \n */\n\ncase class DebsDataItem(sid:Int, ts:Long, x:Int, y:Int, z:Int, v:Int, a:Int , vx:Int, vy:Int, vz:Int, ax:Int, ay:Int, az:Int )\n\nvar debs2013DataStream = senv.addSource(fs)\n\nvar debsItemDataStreamWithoutTime = debs2013DataStream.map(line=>{\n    val items = line.split(\",\")\n    DebsDataItem(\n        items(0).toInt,\n        items(1).toLong,\n        items(2).toInt,\n        items(3).toInt,\n        items(4).toInt,\n        items(5).toInt,\n        items(6).toInt,\n        items(7).toInt,\n        items(8).toInt,\n        items(9).toInt,\n        items(10).toInt,\n        items(11).toInt,\n        items(12).toInt\n        )\n})\n\n\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\nsenv.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);\n\n\n// Assign Event timestemp\nclass DebsTimestampAssigner extends AssignerWithPunctuatedWatermarks[DebsDataItem](){\n\n    def\textractTimestamp(element:DebsDataItem, previousElementTimestamp:Long):Long = {\n        val ms = element.ts / 1000000000L; // The timestamp profided by the dataset is in picoseconds, so we neet to convert it in milliseconds. \n        ms\n    }\n    \n    def  checkAndGetNextWatermark( lastElement: DebsDataItem,  extractedTimestamp: Long): Watermark = {\n        // return the watermark as current time minus the maximum time lag\n\t\treturn new Watermark(extractedTimestamp);\n    }\n}\n  \nvar debsItemDataStream = debsItemDataStreamWithoutTime.setParallelism(1).assignTimestampsAndWatermarks(new DebsTimestampAssigner());",
+         "dateUpdated":"2016-11-21T15:45:57+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorHide":false,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933093512_806379163",
+         "id":"20161031-175813_2131353978",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.functions.source._\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext\nimport scala.io.Source\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\ndefined class FileSource\nfs: FileSource = FileSource@3ce1f96c\ndefined class DebsDataItem\ndebs2013DataStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@33dd0f6c\ndebsItemDataStreamWithoutTime: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@11b68810\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\ndefined class DebsTimestampAssigner2\ndebsItemDataStream: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@6cf6bf81\n"
+         },
+         "dateCreated":"2016-10-31T17:58:13+0100",
+         "dateStarted":"2016-11-21T15:34:57+0100",
+         "dateFinished":"2016-11-21T15:35:37+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1685"
+      },
+      {  
+         "text":"%md\n### Line chart ui-element",
+         "dateUpdated":"2016-11-21T15:34:57+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala",
+            "editorHide":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933156082_-1745367487",
+         "id":"20161031-175916_525274756",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h3>Line chart ui-element</h3>\n"
+         },
+         "dateCreated":"2016-10-31T17:59:16+0100",
+         "dateStarted":"2016-11-21T15:35:00+0100",
+         "dateFinished":"2016-11-21T15:35:00+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1686"
+      },
+      {  
+         "text":"%angular\n\n<style>\n    .line {\n        fill: none;\n        stroke: steelblue;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n    .axis path,\n.axis line {\n  fill: none;\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.axis text {\n  font: 10px sans-serif;\n}\n.axis--x text{\n   display: none;\n}\n</style>\n<script>\nzeppelin.addComponent(\n    \"i2Linechart\",\n    \"\",\n    function(scope,element){\n      \n        element.addClass('block');\n        \n        var n = 500\n            data = []\n        \n        for(var i = 0; i < n; i++){\n            data.push({x:i, y:0});\n        }\n            \n        d3.select(element[0])\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var svg = d3.select(element[0])\n          .append(\"svg\")\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var margin = {top: 20, right: 20, bottom: 20, left: 80};\n            \n        width = +svg.attr(\"width\") - margin.left - margin.right;\n        height = +svg.attr(\"height\") - margin.top - margin.bottom;\n         console.log(width)\n        \n        g = svg.append(\"g\")\n        .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");\n    \n        g.append(\"defs\").append(\"clipPath\")\n            .attr(\"id\", \"clip\")\n            .append(\"rect\")\n            .attr(\"width\", width)\n            .attr(\"height\", height);\n        var linesvg = g.append(\"path\")\n            .datum(data)\n            .attr(\"class\", \"line\")\n            .attr(\"d\", line);\n            \n        var xScale = d3.scale.linear()\n            .domain([0, n - 1])\n            .range([0, width]);\n     \n    \n        var yScale = d3.scale.linear()\n            .domain([0,n])\n            .range([height, 0]);\n             \n    \n        var line = d3.svg.line()\n            .interpolate(\"monotone\")\n            .x(function (d, i) {\n                \n                return xScale(d.x);\n            })\n            .y(function (d, i) {\n                //console.log(d.y)\n                //console.log(yScale(d.y))\n                return yScale(d.y);\n            });\n  \n        \n            \n        var xAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--x\")\n            .attr(\"transform\", \"translate(0,\" + yScale(0) + \")\")\n            .call(d3.svg.axis()\n                .scale(xScale)\n                .orient(\"bottom\"));\n            \n        var yAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--y\")\n            .attr(\"transform\", \"translate(405)\")\n            .call(d3.svg.axis()\n                .scale(yScale)\n                \n                .orient(\"right\"));\n\n        function setYScale(){\n            var yValues = _.map(data, function(item){\n                return item.y\n            })\n            \n            var maxY = _.max(yValues);\n            var minY = _.min(yValues);\n            yScale.domain([0, maxY + (maxY*0.1)])\n            yAxis.call(d3.svg.axis()\n                .scale(yScale)\n                .orient(\"right\"));\n        }\n        \n        \n        \n        \n        var isRequested = false;\n        var stop=false;\n        function drawChart() {\n            if(isRequested){\n                isRequested = false;\n                setYScale()\n                linesvg\n                .datum(data)\n                .attr(\"d\", line)\n                //.attr(\"transform\", null);\n                \n                \n            }\n            if(!stop)\n                window.requestAnimationFrame(drawChart);\n        }\n        \n        window.requestAnimationFrame(drawChart);\n    \n        function shiftData(){\n           data = _.map(data, function(item){\n               item.x = item.x - 1;\n               return item;\n           });\n           data = _.filter(data, function(item){\n               return item.x >= 0;\n           });\n            \n        }    \n        \n        \n        \n        var remove = scope.$watch('stream', function(newValue, oldValue) {\n           if(newValue!=undefined){\n               console.log(newValue)\n               var v_min = newValue._1;\n               var v_max = newValue._2;\n               var t_min = newValue._3;\n               var t_max = newValue._4;\n               data.push({x:n, y:t_min});\n               data.push({x:n, y:v_max});\n               data.push({x:n, y:v_min});\n               data.push({x:n, y:t_max});\n               shiftData()\n               isRequested = true;\n           }\n        })\n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n        \n        isRequested = true;\n})\n</script>",
+         "dateUpdated":"2016-11-21T15:34:57+0100",
+         "config":{  
+            "colWidth":6,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/html"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475255223692_1493668409",
+         "id":"20160930-190703_952140274",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n    .line {\n        fill: none;\n        stroke: steelblue;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n    .axis path,\n.axis line {\n  fill: none;\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.axis text {\n  font: 10px sans-serif;\n}\n.axis--x text{\n   display: none;\n}\n</style>\n<script>\nzeppelin.addComponent(\n    \"i2Linechart\",\n    \"\",\n    function(scope,element){\n      \n        element.addClass('block');\n        \n        var n = 500\n            data = []\n        \n        for(var i = 0; i < n; i++){\n            data.push({x:i, y:0});\n        }\n            \n        d3.select(element[0])\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var svg = d3.select(element[0])\n          .append(\"svg\")\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var margin = {top: 20, right: 20, bottom: 20, left: 80};\n            \n        width = +svg.attr(\"width\") - margin.left - margin.right;\n        height = +svg.attr(\"height\") - margin.top - margin.bottom;\n         console.log(width)\n        \n        g = svg.append(\"g\")\n        .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");\n    \n        g.append(\"defs\").append(\"clipPath\")\n            .attr(\"id\", \"clip\")\n            .append(\"rect\")\n            .attr(\"width\", width)\n            .attr(\"height\", height);\n        var linesvg = g.append(\"path\")\n            .datum(data)\n            .attr(\"class\", \"line\")\n            .attr(\"d\", line);\n            \n        var xScale = d3.scale.linear()\n            .domain([0, n - 1])\n            .range([0, width]);\n     \n    \n        var yScale = d3.scale.linear()\n            .domain([0,n])\n            .range([height, 0]);\n             \n    \n        var line = d3.svg.line()\n            .interpolate(\"monotone\")\n            .x(function (d, i) {\n                \n                return xScale(d.x);\n            })\n            .y(function (d, i) {\n                //console.log(d.y)\n                //console.log(yScale(d.y))\n                return yScale(d.y);\n            });\n  \n        \n            \n        var xAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--x\")\n            .attr(\"transform\", \"translate(0,\" + yScale(0) + \")\")\n            .call(d3.svg.axis()\n                .scale(xScale)\n                .orient(\"bottom\"));\n            \n        var yAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--y\")\n            .attr(\"transform\", \"translate(405)\")\n            .call(d3.svg.axis()\n                .scale(yScale)\n                \n                .orient(\"right\"));\n\n        function setYScale(){\n            var yValues = _.map(data, function(item){\n                return item.y\n            })\n            \n            var maxY = _.max(yValues);\n            var minY = _.min(yValues);\n            yScale.domain([0, maxY + (maxY*0.1)])\n            yAxis.call(d3.svg.axis()\n                .scale(yScale)\n                .orient(\"right\"));\n        }\n        \n        \n        \n        \n        var isRequested = false;\n        var stop=false;\n        function drawChart() {\n            if(isRequested){\n                isRequested = false;\n                setYScale()\n                linesvg\n                .datum(data)\n                .attr(\"d\", line)\n                //.attr(\"transform\", null);\n                \n                \n            }\n            if(!stop)\n                window.requestAnimationFrame(drawChart);\n        }\n        \n        window.requestAnimationFrame(drawChart);\n    \n        function shiftData(){\n           data = _.map(data, function(item){\n               item.x = item.x - 1;\n               return item;\n           });\n           data = _.filter(data, function(item){\n               return item.x >= 0;\n           });\n            \n        }    \n        \n        \n        \n        var remove = scope.$watch('stream', function(newValue, oldValue) {\n           if(newValue!=undefined){\n               console.log(newValue)\n               var v_min = newValue._1;\n               var v_max = newValue._2;\n               var t_min = newValue._3;\n               var t_max = newValue._4;\n               data.push({x:n, y:t_min});\n               data.push({x:n, y:v_max});\n               data.push({x:n, y:v_min});\n               data.push({x:n, y:t_max});\n               shiftData()\n               isRequested = true;\n           }\n        })\n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n        \n        isRequested = true;\n})\n</script>"
+         },
+         "dateCreated":"2016-09-30T19:07:03+0200",
+         "dateStarted":"2016-11-21T15:34:57+0100",
+         "dateFinished":"2016-11-21T15:35:00+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1687"
+      },
+      {  
+         "text":"%flink\nimport org.apache.zeppelin.flink.ui._;\nclass LineChartUi() extends UIComponent[(Int,Int,Int,Int,Long), Any](classOf[Any]) {\n\n    scope.remove(\"stream\")\n   \n   override def invoke(dataItem:(Int,Int,Int,Int,Long)) = {\n     scope.put(\"stream\" , dataItem);\n   }\n   \n   def getTemplate(): String = {\n       \"<i2-linechart></i2-linechart>\"\n   }\n}",
+         "dateUpdated":"2016-11-21T15:34:57+0100",
+         "config":{  
+            "colWidth":6,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475096048294_1741309732",
+         "id":"20160928-225408_1678709872",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.zeppelin.flink.ui._\ndefined class LineChartUi\n"
+         },
+         "dateCreated":"2016-09-28T22:54:08+0200",
+         "dateStarted":"2016-11-21T15:35:00+0100",
+         "dateFinished":"2016-11-21T15:35:39+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1688"
+      },
+      {  
+         "text":"%md \n### Interactive selectbox:",
+         "dateUpdated":"2016-11-21T15:34:58+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorHide":true,
+            "editorMode":"ace/mode/markdown"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933264469_-131376500",
+         "id":"20161031-180104_369141261",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h3>Interactive selectbox:</h3>\n"
+         },
+         "dateCreated":"2016-10-31T18:01:04+0100",
+         "dateStarted":"2016-11-21T15:35:00+0100",
+         "dateFinished":"2016-11-21T15:35:00+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1689"
+      },
+      {  
+         "text":"%flink \nimport scala.collection.JavaConverters._\n\nclass Selection(label:String, options : List[String], defaultOption: String) extends UIComponent[Any,String](classOf[String]) {\n   scope.put(\"label\", label)\n   scope.put(\"options\", options.asJava)        \n   scope.put(\"select\", defaultOption)\n   \n   scope.watch(\"select\",(_:String,newValue:String)=>{\n        addMessageToOutputStream(newValue)\n    })\n   \n   def getTemplate(): String = {\n        \"<form class='form-inline'>\"+   \n        \"<div class='form-group'>\"+   \n        \"<label for='multipleSelect'> {{label}}: </label><br>\" +\n        \"<select class='form-control' name='multipleSelect' id='multipleSelect' ng-model='select'> \" +\n        \"  <option  ng-repeat='option in options' value='{{option}}'>{{option}}</option>\" +\n        \"</select><br>\"+\n        \"</div>\"+\n        \"</form>\"\n   }\n}",
+         "dateUpdated":"2016-11-21T15:34:58+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/markdown"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933290048_-1361808939",
+         "id":"20161031-180130_1301750061",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import scala.collection.JavaConverters._\ndefined class Selection\n"
+         },
+         "dateCreated":"2016-10-31T18:01:30+0100",
+         "dateStarted":"2016-11-21T15:35:38+0100",
+         "dateFinished":"2016-11-21T15:35:41+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1690"
+      },
+      {  
+         "text":"%md \n### Flink Job:\n1. First we add the M4 aggregation algorithm\n2. We add the select box as flink source\n3. Integrate different components",
+         "dateUpdated":"2016-11-21T15:47:40+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/markdown",
+            "editorHide":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1479739568137_-1616428952",
+         "id":"20161121-154608_1517786278",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h3>Flink Job:</h3>\n<ol>\n<li>First we add the M4 aggregation algorithm</li>\n<li>We add the select box as flink source</li>\n<li>Integrate different components</li>\n</ol>\n"
+         },
+         "dateCreated":"2016-11-21T15:46:08+0100",
+         "dateStarted":"2016-11-21T15:47:38+0100",
+         "dateFinished":"2016-11-21T15:47:38+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1691"
+      },
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.windowing.assigners._\n/**\n * Input stream with x and y value\n */\nimplicit class M4(stream: DataStream[(Long, Int)]) {\n  def m4(time:Time): DataStream[(Int,Int,Int,Int,Long)] = {\n      val windowedStream = stream\n      .windowAll(TumblingEventTimeWindows.of(time))\n      var v_min = windowedStream.minBy(1).map(x=>(x._2,Int.MinValue, Int.MaxValue, Int.MinValue, x._1));\n      var v_max = windowedStream.maxBy(1).map(x=>(Int.MaxValue, x._2, Int.MaxValue, Int.MinValue, x._1));\n      var t_min = windowedStream.minBy(0).map(x=>(Int.MaxValue, Int.MinValue, x._2, Int.MinValue, x._1));\n      var t_max = windowedStream.maxBy(0).map(x=>(Int.MaxValue, Int.MinValue, Int.MaxValue, x._2, x._1));\n      var allAggregations = v_min.union(v_max, t_min, t_max);\n      allAggregations\n        .windowAll(TumblingEventTimeWindows.of(time))\n        .fold((-100,-100,-100,-100,-100L)) ((current:(Int,Int,Int,Int,Long), value:(Int,Int,Int,Int,Long)) => {value match {\n             case ( v_min, Int.MinValue, Int.MaxValue, Int.MinValue,_)   =>     (v_min, current._2, current._3, current._4,current._5)\n             case ( Int.MaxValue, v_max, Int.MaxValue, Int.MinValue,_)   =>     (current._1, v_max, current._3, current._4,current._5)\n             case ( Int.MaxValue, Int.MinValue, t_min, Int.MinValue,_)   =>     (current._1, current._2, t_min, current._4,current._5)\n             case ( Int.MaxValue, Int.MinValue, Int.MaxValue, t_max,maxTime)   =>     (current._1, current._2, current._3, t_max,maxTime)\n             }})\n  }\n}",
+         "dateUpdated":"2016-11-21T15:34:58+0100",
+         "config":{  
+            "colWidth":6,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475096159563_1046589492",
+         "id":"20160928-225559_61865482",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.windowing.assigners._\ndefined class M4\n"
+         },
+         "dateCreated":"2016-09-28T22:55:59+0200",
+         "dateStarted":"2016-11-21T15:35:39+0100",
+         "dateFinished":"2016-11-21T15:35:44+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1692"
+      },
+      {  
+         "text":"%flink \nvar linechartWindowSelection = new Selection(\"select windowning\",List(\"30s\",\"1min\",\"5min\"),\"1min\")\nval linechartWindowSelectionStream = senv.addSource(linechartWindowSelection.getOutputStreamSource)\n                                    .name(\"Linechart window selection source\");\n                                    ",
+         "dateUpdated":"2016-11-21T15:34:58+0100",
+         "config":{  
+            "colWidth":6,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/markdown"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477933429083_-1029554456",
+         "id":"20161031-180349_1096094337",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<form class='form-inline'><div class='form-group'><label for='multipleSelect'> {{label}}: </label><br><select class='form-control' name='multipleSelect' id='multipleSelect' ng-model='select'>   <option  ng-repeat='option in options' value='{{option}}'>{{option}}</option></select><br></div></form>\nlinechartWindowSelectionStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@5276ebbb\n"
+         },
+         "dateCreated":"2016-10-31T18:03:49+0100",
+         "dateStarted":"2016-11-21T15:35:42+0100",
+         "dateFinished":"2016-11-21T15:35:46+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1693"
+      },
+      {  
+         "text":"%flink \nimport org.apache.flink.streaming.api.functions.co.CoFlatMapFunction\nimport org.apache.flink.util.Collector\nvar linechart = new LineChartUi()\n\nvar ballStream = debsItemDataStream\n    .filter(dataItem=> dataItem.sid == 4)\n    .map(x=>(x.ts,x.v))\n\n\nval m4Stream30s = ballStream.m4(Time.milliseconds(60)).map(item=>(\"30s\",item))\nvar m4Stream1min = ballStream.m4(Time.milliseconds(120)).map(item=>(\"1min\",item))\nval m4Stream5min = ballStream.m4(Time.milliseconds(600)).map(item=>(\"5min\",item))\n\nvar unionWindows = m4Stream30s.union(m4Stream1min,m4Stream5min)\nvar connectWithWindowSelection = unionWindows.connect(linechartWindowSelectionStream)\nval linechartDataStream = connectWithWindowSelection.flatMap {\n    new CoFlatMapFunction[(String,(Int,Int,Int,Int,Long)), String, (Int,Int,Int,Int,Long)] {\n        \n        var selectedWindow = \"1min\"\n    \n        override def flatMap2(elem: String, collector:  Collector[(Int,Int,Int,Int,Long)]): Unit = {\n            selectedWindow = elem\n        }\n\n        override def flatMap1(metricItem: (String,(Int,Int,Int,Int,Long)), collector: Collector[(Int,Int,Int,Int,Long)]): Unit = {\n            if(metricItem._1.equals(selectedWindow)){\n                collector.collect(metricItem._2);\n            }\n        }\n    }\n}\n\n\nlinechartDataStream.addSink(linechart.getSink)",
+         "dateUpdated":"2016-11-21T15:34:59+0100",
+         "config":{  
+            "colWidth":6,
+            "graph":{  
+               "mode":"table",
+               "height":543.107666015625,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475096208059_-518507737",
+         "id":"20160928-225648_1411974028",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<i2-linechart></i2-linechart>\nballStream: org.apache.flink.streaming.api.scala.DataStream[(Long, Int)] = org.apache.flink.streaming.api.scala.DataStream@70e1a4c8\nm4Stream30s: org.apache.flink.streaming.api.scala.DataStream[(String, (Int, Int, Int, Int, Long))] = org.apache.flink.streaming.api.scala.DataStream@3c9c190\nm4Stream1min: org.apache.flink.streaming.api.scala.DataStream[(String, (Int, Int, Int, Int, Long))] = org.apache.flink.streaming.api.scala.DataStream@5df14810\nm4Stream5min: org.apache.flink.streaming.api.scala.DataStream[(String, (Int, Int, Int, Int, Long))] = org.apache.flink.streaming.api.scala.DataStream@4a23cc2b\nunionWindows: org.apache.flink.streaming.api.scala.DataStream[(String, (Int, Int, Int, Int, Long))] = org.apache.flink.streaming.api.scala.DataStream@6f933c31\nconnectWithWindowSelection: org.apache.flink.streaming.api.scala.ConnectedStreams[(String, (Int, Int, Int, Int, Long)),String] = org.apache.flink.streaming.api.scala.ConnectedStreams@cb02de0\nlinechartDataStream: org.apache.flink.streaming.api.scala.DataStream[(Int, Int, Int, Int, Long)] = org.apache.flink.streaming.api.scala.DataStream@5f5332eb\nres6: org.apache.flink.streaming.api.datastream.DataStreamSink[(Int, Int, Int, Int, Long)] = org.apache.flink.streaming.api.datastream.DataStreamSink@370d301a\n"
+         },
+         "dateCreated":"2016-09-28T22:56:48+0200",
+         "dateStarted":"2016-11-21T15:35:44+0100",
+         "dateFinished":"2016-11-21T15:35:51+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1694"
+      },
+      {  
+         "text":"%flink \n\nsenv.execute(\"i2 demo\")",
+         "dateUpdated":"2016-11-21T15:34:59+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475096268137_-1607839143",
+         "id":"20160928-225748_95293517",
+         "result":{  
+            "code":"ERROR",
+            "type":"TEXT",
+            "msg":"Submitting job with JobID: 08ab3901fd015351a65cdacefb3b7955. Waiting for job completion.\n11/21/2016 15:35:55\tJob execution switched to status RUNNING.\n11/21/2016 15:35:55\tSource: Custom Source -> Map -> Timestamps/Watermarks(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tSource: Custom Source -> Map -> Timestamps/Watermarks(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tSource: Linechart window selection source(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tSource: Linechart window selection source(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tFilter -> Map(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tFilter -> Map(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@117bb78f}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@117bb78f}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@41d8ff48}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@41d8ff48}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@23093e2}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@23093e2}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@2c5053f6}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@2c5053f6}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@7eded195}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(60), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@7eded195}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@c4546cb}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@c4546cb}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@64e85228}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@64e85228}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@26c44188}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@26c44188}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@12642b89}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@12642b89}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@224b6b5e}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(120), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@224b6b5e}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@17b30b68}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@17b30b68}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@19aa5e4}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@19aa5e4}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@63e092ad}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@63e092ad}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@35166e14}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@35166e14}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@65da226}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tTriggerWindow(TumblingEventTimeWindows(600), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@65da226}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tMap(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tMap(1/1) switched to DEPLOYING \n11/21/2016 15:35:55\tCo-Flat Map -> Sink: Unnamed(1/1) switched to SCHEDULED \n11/21/2016 15:35:55\tCo-Flat Map -> Sink: Unnamed(1/1) switched to DEPLOYING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@117bb78f}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@2c5053f6}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tSource: Custom Source -> Map -> Timestamps/Watermarks(1/1) switched to RUNNING \n11/21/2016 15:35:56\tSource: Linechart window selection source(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@41d8ff48}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@23093e2}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@64e85228}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tFilter -> Map(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@26c44188}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(60), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@7eded195}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@c4546cb}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@12642b89}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(120), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@224b6b5e}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@17b30b68}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@19aa5e4}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@63e092ad}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@35166e14}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tTriggerWindow(TumblingEventTimeWindows(600), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@65da226}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to RUNNING \n11/21/2016 15:35:56\tMap(1/1) switched to RUNNING \n11/21/2016 15:35:56\tCo-Flat Map -> Sink: Unnamed(1/1) switched to RUNNING \n11/21/2016 15:40:25\tJob execution switched to status CANCELLING.\n11/21/2016 15:40:25\tSource: Custom Source -> Map -> Timestamps/Watermarks(1/1) switched to CANCELING \n11/21/2016 15:40:25\tSource: Linechart window selection source(1/1) switched to CANCELING \n11/21/2016 15:40:25\tFilter -> Map(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@117bb78f}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@41d8ff48}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@23093e2}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@2c5053f6}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@7eded195}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@c4546cb}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@64e85228}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@26c44188}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@12642b89}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@224b6b5e}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@17b30b68}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@19aa5e4}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@63e092ad}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@35166e14}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@65da226}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELING \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELING \n11/21/2016 15:40:25\tCo-Flat Map -> Sink: Unnamed(1/1) switched to CANCELING \n11/21/2016 15:40:25\tSource: Custom Source -> Map -> Timestamps/Watermarks(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@7eded195}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@64e85228}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@26c44188}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@c4546cb}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@12642b89}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@63e092ad}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@2c5053f6}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@19aa5e4}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@17b30b68}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tSource: Linechart window selection source(1/1) switched to CANCELED \n11/21/2016 15:40:25\tFilter -> Map(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@65da226}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tCo-Flat Map -> Sink: Unnamed(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(600), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@35166e14}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(120), FoldingStateDescriptor{serializer=null, initialValue=(-100,-100,-100,-100,-100), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@224b6b5e}, EventTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@41d8ff48}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tMap(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@117bb78f}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tTriggerWindow(TumblingEventTimeWindows(60), ReducingStateDescriptor{serializer=$line159.$read$$iw$$iw$$iw$$iw$$iw$$iw$$$$$40bbca531383eb7b26596489b9fbfa9$$$$iw$$iw$$iw$$iw$$iw$$iw$$anon$2$$anon$1@e2d18a95, reduceFunction=org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator@23093e2}, EventTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n11/21/2016 15:40:25\tJob execution switched to status CANCELED.\norg.apache.flink.client.program.ProgramInvocationException: The program execution failed: Job was cancelled.\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:413)\n\tat org.apache.flink.client.program.StandaloneClusterClient.submitJob(StandaloneClusterClient.java:92)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:389)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:381)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.executeRemotely(RemoteStreamEnvironment.java:209)\n\tat org.apache.flink.api.java.ScalaShellRemoteStreamEnvironment.executeRemotely(ScalaShellRemoteStreamEnvironment.java:87)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.execute(RemoteStreamEnvironment.java:173)\n\tat org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.scala:585)\n\tat .<init>(<console>:56)\n\tat .<clinit>(<console>)\n\tat .<init>(<console>:7)\n\tat .<clinit>(<console>)\n\tat $print(<console>)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat scala.tools.nsc.interpreter.IMain$ReadEvalPrint.call(IMain.scala:734)\n\tat scala.tools.nsc.interpreter.IMain$Request.loadAndRun(IMain.scala:983)\n\tat scala.tools.nsc.interpreter.IMain.loadAndRunReq$1(IMain.scala:573)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:604)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:568)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:305)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:301)\n\tat scala.util.DynamicVariable.withValue(DynamicVariable.scala:57)\n\tat scala.Console$.withOut(Console.scala:107)\n\tat scala.Console.withOut(Console.scala)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:299)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:244)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:94)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:341)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:176)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler$1.run(FIFOScheduler.java:139)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:745)\nCaused by: org.apache.flink.runtime.client.JobCancellationException: Job was cancelled.\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply$mcV$sp(JobManager.scala:814)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.liftedTree1$1(Future.scala:24)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.run(Future.scala:24)\n\tat akka.dispatch.TaskInvocation.run(AbstractDispatcher.scala:41)\n\tat akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask.exec(AbstractDispatcher.scala:401)\n\tat scala.concurrent.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.pollAndExecAll(ForkJoinPool.java:1253)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1346)\n\tat scala.concurrent.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)\n\tat scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)\n\n"
+         },
+         "dateCreated":"2016-09-28T22:57:48+0200",
+         "dateStarted":"2016-11-21T15:35:46+0100",
+         "dateFinished":"2016-11-21T15:40:26+0100",
+         "status":"ERROR",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1695"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-11-21T15:34:59+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1476704191818_2054591109",
+         "id":"20161017-133631_2123559971",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2016-10-17T13:36:31+0200",
+         "dateStarted":"2016-11-21T15:35:52+0100",
+         "dateFinished":"2016-11-21T15:40:26+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1696"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-11-21T15:34:59+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1478466766945_-133538707",
+         "id":"20161106-221246_39041085",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2016-11-06T22:12:46+0100",
+         "dateStarted":"2016-11-21T15:40:26+0100",
+         "dateFinished":"2016-11-21T15:40:26+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1697"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-11-21T15:34:59+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1478524051487_-1089770302",
+         "id":"20161107-140731_466576160",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2016-11-07T14:07:31+0100",
+         "dateStarted":"2016-11-21T15:40:26+0100",
+         "dateFinished":"2016-11-21T15:40:26+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1698"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-11-21T15:35:00+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1479736356975_-1387697637",
+         "id":"20161121-145236_265038169",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2016-11-21T14:52:36+0100",
+         "dateStarted":"2016-11-21T15:40:26+0100",
+         "dateFinished":"2016-11-21T15:40:26+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1699"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-11-21T15:35:00+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1479738900045_1961421113",
+         "id":"20161121-153500_2105828046",
+         "dateCreated":"2016-11-21T15:35:00+0100",
+         "status":"READY",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:1700"
+      }
+   ],
+   "name":"Interactive Linechart",
+   "id":"2BZB95JQ2",
+   "lastReplName":{  
+      "value":"md"
+   },
+   "angularObjects":{  
+      "2BTSUMABR:shared_process":[  
+
+      ],
+      "2BW9ERAFN:shared_process":[  
+
+      ],
+      "2BV663H57:shared_process":[  
+
+      ],
+      "2BU9KYWQS:shared_process":[  
+
+      ],
+      "2BVAE135N:shared_process":[  
+
+      ],
+      "2BTT2PFT4:shared_process":[  
+
+      ],
+      "2BVU384MN:shared_process":[  
+
+      ],
+      "2BUYZQ8B4:shared_process":[  
+
+      ],
+      "2BVSTQ92R:shared_process":[  
+
+      ],
+      "2BTDGKQDB:shared_process":[  
+
+      ],
+      "2BWV9X8N5:shared_process":[  
+
+      ],
+      "2BWCJFNSG:shared_process":[  
+
+      ],
+      "2BUC397YD:shared_process":[  
+         {  
+            "name":"select",
+            "object":"1min",
+            "noteId":"2BZB95JQ2",
+            "paragraphId":"20161031-180349_1096094337"
+         },
+         {  
+            "name":"options",
+            "object":[  
+               "30s",
+               "1min",
+               "5min"
+            ],
+            "noteId":"2BZB95JQ2",
+            "paragraphId":"20161031-180349_1096094337"
+         },
+         {  
+            "name":"label",
+            "object":"select windowning",
+            "noteId":"2BZB95JQ2",
+            "paragraphId":"20161031-180349_1096094337"
+         },
+         {  
+            "name":"stream",
+            "object":{  
+               "_1":10438032,
+               "_2":10922321,
+               "_3":10640158,
+               "_4":10580154,
+               "_5":11015999831555996
+            },
+            "noteId":"2BZB95JQ2",
+            "paragraphId":"20160928-225648_1411974028"
+         }
+      ],
+      "2BTA87VG9:shared_process":[  
+
+      ],
+      "2BWS8R8RS:shared_process":[  
+
+      ],
+      "2BV3SNTNR:shared_process":[  
+
+      ],
+      "2BWAVT2SQ:shared_process":[  
+
+      ]
+   },
+   "config":{  
+      "looknfeel":"default"
+   },
+   "info":{  
+
+   }
+}

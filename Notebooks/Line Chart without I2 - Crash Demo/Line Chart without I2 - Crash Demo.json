@@ -1,0 +1,452 @@
+{  
+   "paragraphs":[  
+      {  
+         "text":"%md\nThis demo is used as a motivation for the I² platform. It tries to aggregate the debs 2013 data stream completely at the client, which leads to an unresponsive browser tab. \nThis is basically caused by the high frequency of the data stream so that the browser has to spend all the time in the js execution phase and can`t refresh the page.\n\n\nCAUTION!!\nWhen you execute this demo be aware that you have to kill the browser tab manually and that it will also be necessary to restart the zeppelin server afterward. ",
+         "dateUpdated":"2017-03-10T15:52:00+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala",
+            "editorHide":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489156553211_368749414",
+         "id":"20170310-153553_763726836",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<p>This demo is used as a motivation for the I² platform. It tries to aggregate the debs 2013 data stream completely at the client, which leads to an unresponsive browser tab.\n<br  />This is basically caused by the high frequency of the data stream so that the browser has to spend all the time in the js execution phase and can`t refresh the page.</p>\n<p>CAUTION!!\n<br  />When you execute this demo be aware that you have to kill the browser tab manually and that it will also be necessary to restart the zeppelin server afterward.</p>\n"
+         },
+         "dateCreated":"2017-03-10T15:35:53+0100",
+         "dateStarted":"2017-03-10T15:51:38+0100",
+         "dateFinished":"2017-03-10T15:51:40+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:220",
+         "focus":true
+      },
+      {  
+         "text":"%angular\n\n<style>\n    .line {\n        fill: none;\n        stroke: steelblue;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n    .axis path,\n.axis line {\n  fill: none;\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.axis text {\n  font: 10px sans-serif;\n}\n.axis--x text{\n   display: none;\n}\n</style>\n<script>\nzeppelin.addComponent(\n    \"i2Linechart\",\n    \"\",\n    function(scope,element){\n      \n       scope.scollLevel  = 0\n       element.on('mousewheel', function (e) {\n                if(!e.ctrlKey)\n                    return true;\n                var event = e.originalEvent;\n                if(event.deltaY<0){\n                    scope.scollLevel = scope.scollLevel  +1;\n                }else{\n                    if(scope.scollLevel>0)\n                    scope.scollLevel = scope.scollLevel  -1\n                }\n                console.log(scope.scollLevel)\n                if(e.preventDefault) { e.preventDefault(); } \n                e.returnValue = false; \n                return false;\n            });\n        element.addClass('block');\n        \n        var n = 100,\n            data = []\n        \n        for(var i = 0; i < n; i++){\n            data.push({x:i, y:(Math.random() * 500)});\n        }\n            \n        d3.select(element[0])\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var svg = d3.select(element[0])\n          .append(\"svg\")\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var margin = {top: 20, right: 20, bottom: 20, left: 80},\n            \n        width = +svg.attr(\"width\") - margin.left - margin.right,\n        height = +svg.attr(\"height\") - margin.top - margin.bottom,\n        \n        g = svg.append(\"g\")\n        .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");\n    \n        g.append(\"defs\").append(\"clipPath\")\n            .attr(\"id\", \"clip\")\n            .append(\"rect\")\n            .attr(\"width\", width)\n            .attr(\"height\", height);\n        var linesvg = g.append(\"path\")\n            .datum(data)\n            .attr(\"class\", \"line\")\n            .attr(\"d\", line);\n            \n        var xScale = d3.scale.linear()\n            .domain([0, n - 1])\n            .range([0, width]);\n     \n    \n        var yScale = d3.scale.linear()\n            .domain([0,500])\n            .range([height, 0]);\n             \n    \n        var line = d3.svg.line()\n            .interpolate(\"monotone\")\n            .x(function (d, i) {\n                \n                return xScale(d.x);\n            })\n            .y(function (d, i) {\n                return yScale(d.y);\n            });\n  \n        \n            \n        var xAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--x\")\n            .attr(\"transform\", \"translate(0,\" + yScale(0) + \")\")\n            .call(d3.svg.axis()\n                .scale(xScale)\n                .orient(\"bottom\"));\n            \n        var yAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--y\")\n            .attr(\"transform\", \"translate(405)\")\n            .call(d3.svg.axis()\n                .scale(yScale)\n                \n                .orient(\"right\"));\n\n        function setYScale(){\n            var yValues = _.map(data, function(item){\n                return item.y\n            })\n            \n            var maxY = _.max(yValues);\n            var minY = _.min(yValues);\n            yScale.domain([0, maxY + (maxY*0.1)])\n            yAxis.call(d3.svg.axis()\n                .scale(yScale)\n                .orient(\"right\"));\n        }\n        \n        \n        \n        \n        var isRequested = false;\n        var stop=false;\n        function drawChart() {\n           \n                setYScale()\n                linesvg\n                .datum(data)\n                .attr(\"d\", line)\n   \n        }\n        \n      \n        function shiftData(){\n           data = _.map(data, function(item){\n               item.x = item.x - 1;\n               return item;\n           });\n           data = _.filter(data, function(item){\n               return item.x >= 0;\n           });\n            \n        }    \n        \n        var currentSum = 1;\n        var currentCount = 1;\n        var lastTimeStemp = 0;\n        function addValue(value,ts){\n            var timeDiff = ts - lastTimeStemp;\n            currentCount++;\n            currentSum = currentSum +value;\n            if(timeDiff>(1000*1000*1000)){\n              data.push({x:n, y:currentSum/currentCount});\n              shiftData()\n              drawChart()\n              lastTimeStemp = ts;\n              currentSum = 1;\n              currentCount = 1;\n            }\n        }\n        \n        var remove = scope.$watch('stream3', function(newValue, oldValue) {\n           if(newValue!=undefined){\n               addValue(newValue._1$mcI$sp,newValue._2$mcJ$sp)\n           }\n        })\n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n        isRequested = true;\n})\n</script>",
+         "dateUpdated":"2017-03-10T15:52:37+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700247044_509058743",
+         "id":"20161005-224407_1343534147",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n    .line {\n        fill: none;\n        stroke: steelblue;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n    .axis path,\n.axis line {\n  fill: none;\n  stroke: #000;\n  shape-rendering: crispEdges;\n}\n\n.axis text {\n  font: 10px sans-serif;\n}\n.axis--x text{\n   display: none;\n}\n</style>\n<script>\nzeppelin.addComponent(\n    \"i2Linechart\",\n    \"\",\n    function(scope,element){\n      \n       scope.scollLevel  = 0\n       element.on('mousewheel', function (e) {\n                if(!e.ctrlKey)\n                    return true;\n                var event = e.originalEvent;\n                if(event.deltaY<0){\n                    scope.scollLevel = scope.scollLevel  +1;\n                }else{\n                    if(scope.scollLevel>0)\n                    scope.scollLevel = scope.scollLevel  -1\n                }\n                console.log(scope.scollLevel)\n                if(e.preventDefault) { e.preventDefault(); } \n                e.returnValue = false; \n                return false;\n            });\n        element.addClass('block');\n        \n        var n = 100,\n            data = []\n        \n        for(var i = 0; i < n; i++){\n            data.push({x:i, y:(Math.random() * 500)});\n        }\n            \n        d3.select(element[0])\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var svg = d3.select(element[0])\n          .append(\"svg\")\n          .attr(\"width\", 500)\n          .attr(\"height\", 300);\n        \n        var margin = {top: 20, right: 20, bottom: 20, left: 80},\n            \n        width = +svg.attr(\"width\") - margin.left - margin.right,\n        height = +svg.attr(\"height\") - margin.top - margin.bottom,\n        \n        g = svg.append(\"g\")\n        .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");\n    \n        g.append(\"defs\").append(\"clipPath\")\n            .attr(\"id\", \"clip\")\n            .append(\"rect\")\n            .attr(\"width\", width)\n            .attr(\"height\", height);\n        var linesvg = g.append(\"path\")\n            .datum(data)\n            .attr(\"class\", \"line\")\n            .attr(\"d\", line);\n            \n        var xScale = d3.scale.linear()\n            .domain([0, n - 1])\n            .range([0, width]);\n     \n    \n        var yScale = d3.scale.linear()\n            .domain([0,500])\n            .range([height, 0]);\n             \n    \n        var line = d3.svg.line()\n            .interpolate(\"monotone\")\n            .x(function (d, i) {\n                \n                return xScale(d.x);\n            })\n            .y(function (d, i) {\n                //console.log(d.y)\n                //console.log(yScale(d.y))\n                return yScale(d.y);\n            });\n  \n        \n            \n        var xAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--x\")\n            .attr(\"transform\", \"translate(0,\" + yScale(0) + \")\")\n            .call(d3.svg.axis()\n                .scale(xScale)\n                .orient(\"bottom\"));\n            \n        var yAxis = g.append(\"g\")\n            .attr(\"class\", \"axis axis--y\")\n            .attr(\"transform\", \"translate(405)\")\n            .call(d3.svg.axis()\n                .scale(yScale)\n                \n                .orient(\"right\"));\n\n        function setYScale(){\n            var yValues = _.map(data, function(item){\n                return item.y\n            })\n            \n            var maxY = _.max(yValues);\n            var minY = _.min(yValues);\n            yScale.domain([0, maxY + (maxY*0.1)])\n            yAxis.call(d3.svg.axis()\n                .scale(yScale)\n                .orient(\"right\"));\n        }\n        \n        \n        \n        \n        var isRequested = false;\n        var stop=false;\n        function drawChart() {\n           \n                setYScale()\n                linesvg\n                .datum(data)\n                .attr(\"d\", line)\n                //.attr(\"transform\", null);\n   \n        }\n        \n      \n        function shiftData(){\n           data = _.map(data, function(item){\n               item.x = item.x - 1;\n               return item;\n           });\n           data = _.filter(data, function(item){\n               return item.x >= 0;\n           });\n            \n        }    \n        \n        var currentSum = 1;\n        var currentCount = 1;\n        var lastTimeStemp = 0;\n        function addValue(value,ts){\n            var timeDiff = ts - lastTimeStemp;\n            currentCount++;\n            currentSum = currentSum +value;\n            if(timeDiff>(1000*1000*1000)){\n              data.push({x:n, y:currentSum/currentCount});\n              shiftData()\n              drawChart()\n              lastTimeStemp = ts;\n              currentSum = 1;\n              currentCount = 1;\n            }\n        }\n        \n        var remove = scope.$watch('stream3', function(newValue, oldValue) {\n           console.log(\"test\")\n           if(newValue!=undefined){\n               console.log(newValue)\n               addValue(newValue._1$mcI$sp,newValue._2$mcJ$sp)\n           }\n        })\n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n        \n        isRequested = true;\n        console.log(\"true\")\n})\n</script>"
+         },
+         "dateCreated":"2016-10-05T22:44:07+0200",
+         "dateStarted":"2017-03-10T15:44:41+0100",
+         "dateFinished":"2017-03-10T15:44:43+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:221"
+      },
+      {  
+         "text":"%flink\nimport org.apache.zeppelin.flink.ui._;\nclass LineChartUi() extends UIComponent[(Int,Long), Any](classOf[Any]) {\n\n    scope.remove(\"stream3\")\n   \n   override def invoke(dataItem:(Int,Long)) = {\n     scope.put(\"stream3\" , dataItem);\n   }\n   \n   def getTemplate(): String = {\n       \"<i2-linechart></i2-linechart>\"\n   }\n}",
+         "dateUpdated":"2017-03-10T15:44:45+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700581564_-1923047969",
+         "id":"20161005-224941_1201948171",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.zeppelin.flink.ui._\ndefined class LineChartUi\n"
+         },
+         "dateCreated":"2016-10-05T22:49:41+0200",
+         "dateStarted":"2017-03-10T15:44:45+0100",
+         "dateFinished":"2017-03-10T15:45:11+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:222"
+      },
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.functions.source._;\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext;\n\nimport org.apache.flink.api.common.typeinfo.TypeInformation;\n\nimport scala.io.Source\n\n\nclass FileSource extends RichSourceFunction[String]() with StoppableFunction{\n    var startSystemTime = System.nanoTime();\n    var startDataTime = 10753295594424116L;\n    var stoped = false;\n    \n    def shiftIterator(fileIterator : Iterator[String] ): Unit = {\n        \n        var line = fileIterator.next()\n        var lineDataTimestamp = line.split(\",\")(1).toLong;\n        \n        while(lineDataTimestamp<=startDataTime){\n            line = fileIterator.next()\n            lineDataTimestamp = line.split(\",\")(1).toLong;\n        }\n    }\n    \n    def run(sc: SourceContext[String]): Unit = {\n        var fileIterator = scala.tools.nsc.io.File(\"debs2013.data\").lines();\n        \n        shiftIterator(fileIterator)\n        startSystemTime = System.nanoTime();\n        \n        for(line <-scala.tools.nsc.io.File(\"debs2013.data\").lines()){\n            \n            if(Thread.interrupted() || stoped){\n                return\n            }\n            var dataTimestamp = line.split(\",\")(1).toLong;\n            if(dataTimestamp > startDataTime){\n                var elapsedSystemTime = System.nanoTime() - startSystemTime;\n                var elapsedDataTime = (dataTimestamp - startDataTime) / 1000; // picoseconds to nanoseconds\n                while(elapsedDataTime > elapsedSystemTime && !Thread.interrupted()){\n                    elapsedSystemTime = System.nanoTime() - startSystemTime;\n                    // active waiting for time\n                } \n                //Thread.sleep(10)\n                sc.collect(line);\n            }\n        }\n    }\n    \n    def stop() : Unit= {\n        stoped = true \n    }\n    \n      def cancel() : Unit= {\n        stoped = true \n    }\n\n}\n\nvar fs = new FileSource()",
+         "dateUpdated":"2017-03-10T15:44:47+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700633143_220231623",
+         "id":"20161005-225033_843571040",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.functions.source._\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext\nimport org.apache.flink.api.common.typeinfo.TypeInformation\nimport scala.io.Source\ndefined class FileSource\nfs: FileSource = FileSource@5b6fc2d1\n"
+         },
+         "dateCreated":"2016-10-05T22:50:33+0200",
+         "dateStarted":"2017-03-10T15:44:49+0100",
+         "dateFinished":"2017-03-10T15:45:14+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:223"
+      },
+      {  
+         "text":"%flink\n/**\n * sid, ts, \n * x, y, z, \n * |v| in μm/s,\n * |a| is zero when the ball is at a fixed position and not 9.81 m/s²).\n * vx, vy, vz, describe direction by a vector with size of 10,000\n * ax, ay, az\n * \n * \n * Hence, the speed of the object in x-direction in SI-units (m/s) is calculated by \n *          v'x = |v| * vx * 1e-4 * 1e-6\n * \n */\n\ncase class DebsDataItem(sid:Int, ts:Long, x:Int, y:Int, z:Int, v:Int, a:Int , vx:Int, vy:Int, vz:Int, ax:Int, ay:Int, az:Int )\nval debs2013DataStream = senv.addSource(fs).name(\"debs2013Data\")\nvar debsItemDataStream = debs2013DataStream.map(line=>{\n    val items = line.split(\",\")\n    DebsDataItem(\n        items(0).toInt,\n        items(1).toLong,\n        items(2).toInt,\n        items(3).toInt,\n        items(4).toInt,\n        items(5).toInt,\n        items(6).toInt,\n        items(7).toInt,\n        items(8).toInt,\n        items(9).toInt,\n        items(10).toInt,\n        items(11).toInt,\n        items(12).toInt\n        )\n})",
+         "dateUpdated":"2017-03-10T15:44:50+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700650322_-321479504",
+         "id":"20161005-225050_845696346",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"defined class DebsDataItem\ndebs2013DataStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@b0ac4aa\ndebsItemDataStream: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@5618e852\n"
+         },
+         "dateCreated":"2016-10-05T22:50:50+0200",
+         "dateStarted":"2017-03-10T15:45:11+0100",
+         "dateFinished":"2017-03-10T15:45:21+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:224"
+      },
+      {  
+         "text":"%flink \nimport org.apache.flink.streaming.api.windowing.assigners._;\nvar linechart = new LineChartUi()\nvar balls = List(4,8,10,12)\ndebsItemDataStream\n    .filter(dataItem=> balls.contains(dataItem.sid) && dataItem.v != 0)\n    .map(x=>(x.a,x.ts))\n    //.windowAll(TumblingProcessingTimeWindows.of(Time.seconds(1)))\n    //.maxBy(1)\n    .addSink(linechart.getSink())",
+         "dateUpdated":"2017-03-10T15:44:52+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700736187_-173196291",
+         "id":"20161005-225216_1213959841",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<i2-linechart></i2-linechart>\nballs: List[Int] = List(4, 8, 10, 12)\nres4: org.apache.flink.streaming.api.datastream.DataStreamSink[(Int, Long)] = org.apache.flink.streaming.api.datastream.DataStreamSink@2f96f56d\n"
+         },
+         "dateCreated":"2016-10-05T22:52:16+0200",
+         "dateStarted":"2017-03-10T15:45:15+0100",
+         "dateFinished":"2017-03-10T15:45:23+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:225"
+      },
+      {  
+         "text":"%flink\nsenv.execute(\"i2 demo\")",
+         "dateUpdated":"2017-03-10T15:44:55+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1475700761500_-1126958166",
+         "id":"20161005-225241_700453648",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"Submitting job with JobID: 1f819fe9c81450147cc74e9ec5339109. Waiting for job completion.\n03/10/2017 15:13:18\tJob execution switched to status RUNNING.\n03/10/2017 15:13:18\tSource: debs2013Data(1/1) switched to SCHEDULED \n03/10/2017 15:13:18\tSource: debs2013Data(1/1) switched to DEPLOYING \n03/10/2017 15:13:18\tMap -> Filter -> Map -> Sink: Unnamed(1/1) switched to SCHEDULED \n03/10/2017 15:13:18\tMap -> Filter -> Map -> Sink: Unnamed(1/1) switched to DEPLOYING \n03/10/2017 15:13:18\tMap -> Filter -> Map -> Sink: Unnamed(1/1) switched to RUNNING \n03/10/2017 15:13:18\tSource: debs2013Data(1/1) switched to RUNNING \n03/10/2017 15:15:27\tSource: debs2013Data(1/1) switched to FINISHED \n03/10/2017 15:15:27\tMap -> Filter -> Map -> Sink: Unnamed(1/1) switched to FINISHED \n03/10/2017 15:15:27\tJob execution switched to status FINISHED.\nres22: org.apache.flink.api.common.JobExecutionResult = org.apache.flink.api.common.JobExecutionResult@7e86bd5c\n"
+         },
+         "dateCreated":"2016-10-05T22:52:41+0200",
+         "dateStarted":"2017-03-10T15:45:21+0100",
+         "dateFinished":"2017-03-10T15:15:27+0100",
+         "status":"ABORT",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:226"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-10-11T18:35:37+0200",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1476203737554_-1334345605",
+         "id":"20161011-183537_179148451",
+         "dateCreated":"2016-10-11T18:35:37+0200",
+         "status":"READY",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:232"
+      }
+   ],
+   "name":"Line Chart without I2 - Crash Demo",
+   "id":"2BY2NXT1F",
+   "lastReplName":{  
+      "value":"flink"
+   },
+   "angularObjects":{  
+      "2BTSUMABR:shared_process":[  
+
+      ],
+      "2BW9ERAFN:shared_process":[  
+
+      ],
+      "2BV663H57:shared_process":[  
+
+      ],
+      "2BU9KYWQS:shared_process":[  
+
+      ],
+      "2BVAE135N:shared_process":[  
+
+      ],
+      "2BTT2PFT4:shared_process":[  
+
+      ],
+      "2BVU384MN:shared_process":[  
+
+      ],
+      "2BUYZQ8B4:shared_process":[  
+
+      ],
+      "2BVSTQ92R:shared_process":[  
+
+      ],
+      "2BTDGKQDB:shared_process":[  
+
+      ],
+      "2BWV9X8N5:shared_process":[  
+
+      ],
+      "2BWCJFNSG:shared_process":[  
+
+      ],
+      "2BUC397YD:shared_process":[  
+         {  
+            "name":"status",
+            "object":false,
+            "noteId":"2BY2NXT1F",
+            "paragraphId":"20161005-225033_843571040"
+         },
+         {  
+            "name":"stream2",
+            "object":{  
+               "_1$mcI$sp":757082,
+               "_2$mcJ$sp":10778178948833892
+            },
+            "noteId":"2BY2NXT1F",
+            "paragraphId":"20161005-225216_1213959841"
+         }
+      ],
+      "2BTA87VG9:shared_process":[  
+
+      ],
+      "2BWS8R8RS:shared_process":[  
+
+      ],
+      "2BV3SNTNR:shared_process":[  
+
+      ],
+      "2BWAVT2SQ:shared_process":[  
+
+      ]
+   },
+   "config":{  
+      "looknfeel":"default"
+   },
+   "info":{  
+
+   }
+}

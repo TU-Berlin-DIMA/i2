@@ -1,0 +1,590 @@
+{  
+   "paragraphs":[  
+      {  
+         "text":"%md\n# Simple Flink Demo:\nThis Demo Contains a minimal example of the i² components:\nIt defines a list ui-element which displays the last 5 elements of the stream.\n\n### First we have to create a Flink Source, which reads the debs data file:",
+         "dateUpdated":"2016-10-31T16:35:37+0100",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/md",
+            "editorHide":true,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483284_-1610667549",
+         "id":"20161031-152626_604820105",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h1>Simple Flink Demo:</h1>\n<p>This Demo Contains a minimal example of the i² components:\n<br  />It defines a list ui-element which displays the last 5 elements of the stream.</p>\n<h3>First we have to create a Flink Source, which reads the debs data file:</h3>\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:35:31+0100",
+         "dateFinished":"2016-10-31T16:35:31+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:149"
+      },
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.functions.source._;\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext;\nimport scala.io.Source\n\n\nclass FileSource extends RichSourceFunction[String]() with StoppableFunction{\n    var startSystemTime = System.nanoTime();\n    var startDataTime = 10753295594424116L;\n    var stoped = false;\n    \n    def shiftIterator(fileIterator : Iterator[String] ): Unit = {\n        \n        var line = fileIterator.next()\n        var lineDataTimestamp = line.split(\",\")(1).toLong;\n        \n        while(lineDataTimestamp<=startDataTime){\n            line = fileIterator.next()\n            lineDataTimestamp = line.split(\",\")(1).toLong;\n        }\n    }\n    \n    def run(sc: SourceContext[String]): Unit = {\n        var fileIterator = scala.tools.nsc.io.File(\"debs2013.data\").lines();\n        \n        shiftIterator(fileIterator) \n        startSystemTime = System.nanoTime();\n        \n        for(line <-scala.tools.nsc.io.File(\"debs2013.data\").lines()){\n            \n            if(Thread.interrupted() || stoped){\n                return\n            }\n            var dataTimestamp = line.split(\",\")(1).toLong;\n            if(dataTimestamp > startDataTime){\n                var elapsedSystemTime = System.nanoTime() - startSystemTime;\n                var elapsedDataTime = (dataTimestamp - startDataTime) / 1000; // picoseconds to nanoseconds\n                while(elapsedDataTime > elapsedSystemTime && !Thread.interrupted()){\n                    elapsedSystemTime = System.nanoTime() - startSystemTime;\n                    // active waiting for time\n                } \n                sc.collect(line);\n            }\n        }\n    }\n    \n    def stop() : Unit= {\n        stoped = true \n    }\n    \n    def cancel() : Unit= {\n        stoped = true \n    }\n\n}\n\nvar fs = new FileSource()",
+         "dateUpdated":"2016-10-31T17:40:16+0100",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483286_-1609898051",
+         "id":"20161031-152600_836386122",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.functions.source._\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext\nimport scala.io.Source\ndefined class FileSource\nfs: FileSource = $$$$211cb729c0e6d8c1ea9972411ed79ec$$$$FileSource@542f86a4\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T17:40:16+0100",
+         "dateFinished":"2016-10-31T17:40:17+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:150",
+         "focus":true
+      },
+      {  
+         "text":"%md \n### Create UI Elements\n\nEach element can contain one frontend element written in java script and one backend element for the connection to flink.\n\nThe frontend part is implemented in the angular interpreter by the zeppelin.addComponent() method.\nThis method takes 3 parameters:\n    zeppelin.addComponent(componentName:String, angularjsHTMLtemplate:String, angularjsDirectiveCode:Function)\nInternaly it creates a angularjs directive: https://docs.angularjs.org/guide/directive\n\nFor the backend part we implement the component as a scala class, which inherits UIComponent\n    UIComponent[FLINKSINKTYPE,FLINKSOURCETYPE](class[FLINKSOURCETYPE])\n\nThis abstract class offers the following public interface:\n    getSink(): returns a flink sink[FLINKSINKTYPE], which calls the intern invoke(FLINKSINKTYPE)\n    getOutputStreamStream(): returns a flink dataStreamSource[FLINKSOURCETYPE]\n    \nFor internal ussage it offers:\n    this.Scope //this instance of Scope offers methods to communicate with the angular js frontend\n    this.addMessage(FLINKSOURCETYPE) // This method adds data items to the outputFlinkStream",
+         "dateUpdated":"2016-10-31T16:45:54+0100",
+         "config":{  
+            "colWidth":12,
+            "editorHide":true,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/markdown"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483286_-1609898051",
+         "id":"20161031-152915_785062505",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h3>Create UI Elements</h3>\n<p>Each element can contain one frontend element written in java script and one backend element for the connection to flink.</p>\n<p>The frontend part is implemented in the angular interpreter by the zeppelin.addComponent() method.\n<br  />This method takes 3 parameters:</p>\n<pre><code>zeppelin.addComponent(componentName:String, angularjsHTMLtemplate:String, angularjsDirectiveCode:Function)\n</code></pre>\n<p>Internaly it creates a angularjs directive: https://docs.angularjs.org/guide/directive</p>\n<p>For the backend part we implement the component as a scala class, which inherits UIComponent</p>\n<pre><code>UIComponent[FLINKSINKTYPE,FLINKSOURCETYPE](class[FLINKSOURCETYPE])\n</code></pre>\n<p>This abstract class offers the following public interface:</p>\n<pre><code>getSink(): returns a flink sink[FLINKSINKTYPE], which calls the intern invoke(FLINKSINKTYPE)\ngetOutputStreamStream(): returns a flink dataStreamSource[FLINKSOURCETYPE]\n</code></pre>\n<p>For internal ussage it offers:</p>\n<pre><code>this.Scope //this instance of Scope offers methods to communicate with the angular js frontend\nthis.addMessage(FLINKSOURCETYPE) // This method adds data items to the outputFlinkStream\n</code></pre>\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:36:09+0100",
+         "dateFinished":"2016-10-31T16:36:09+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:151"
+      },
+      {  
+         "text":"%md \n#### Frontend Component:",
+         "dateUpdated":"2016-10-31T16:37:14+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/markdown",
+            "editorHide":true,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-153029_705295295",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h4>Frontend Component:</h4>\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:37:11+0100",
+         "dateFinished":"2016-10-31T16:37:11+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:152"
+      },
+      {  
+         "text":"%md \n#### Backend Component:",
+         "dateUpdated":"2016-10-31T16:37:06+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/markdown",
+            "editorHide":true,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-153054_1297830569",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h4>Backend Component:</h4>\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:37:04+0100",
+         "dateFinished":"2016-10-31T16:37:04+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:153"
+      },
+      {  
+         "text":"%angular\n<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"elementName\", // replace with your element name\n    \"<ul class='list-group'>\"+\n    \"<li class='list-group-item' ng-repeat='item in items track by $index'>{{$index+1}}. {{item}}</li>\"+\n    \"</ul>\",\n    function(scope,element){\n      scope.items = []; // items List\n      // Listen for new Items\n      scope.$watch('itemHandler', function(newItem) { \n         // add Item to List\n         scope.items.push(newItem) \n         // remove first element if list contains more than 5 elements.\n         if(scope.items.length>5){\n          scope.items.shift();\n         }\n      })     \n    }\n)\n</script>",
+         "dateUpdated":"2016-10-31T16:40:49+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/javascript",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-153114_1122945112",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n// Add some CSS Style\n</style>\n<script>\nzeppelin.addComponent(\n    \"elementName\", // replace with your element name\n    \"<ul class='list-group'>\"+\n    \"<li class='list-group-item' ng-repeat='item in items track by $index'>{{$index+1}}. {{item}}</li>\"+\n    \"</ul>\",\n    function(scope,element){\n      scope.items = []; // items List\n      // Listen for new Items\n      scope.$watch('itemHandler', function(newItem) { \n         // add Item to List\n         scope.items.push(newItem) \n         // remove first element if list contains more than 5 elements.\n         if(scope.items.length>5){\n          scope.items.shift();\n         }\n      })     \n    }\n)\n</script>"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:40:49+0100",
+         "dateFinished":"2016-10-31T16:40:49+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:154"
+      },
+      {  
+         "text":"%flink\nimport org.apache.zeppelin.flink.ui._;\nclass OwnUIElement() extends UIComponent[(String), Any](classOf[Any]) {\n\n   scope.remove(\"itemHandler\")\n\n   override def invoke(dataItem:String) = {\n     scope.put(\"itemHandler\" , dataItem); // send item to frontend\n   }\n\n   def getTemplate(): String = {\n       \"<element-name></element-name>\" // [Normalization](https://docs.angularjs.org/guide/directive)\n   }\n}\n\n\n\n\n",
+         "dateUpdated":"2016-10-31T16:33:55+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-153156_945835356",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.zeppelin.flink.ui._\ndefined class OwnUIElement\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:33:55+0100",
+         "dateFinished":"2016-10-31T16:33:56+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:155"
+      },
+      {  
+         "text":"%md\n### Flink integration\nWe first initialise the uiElement, by creating a instance of the ui-element class.\nThan we use this object as a Flink Sink in our job.",
+         "dateUpdated":"2016-10-31T16:46:02+0100",
+         "config":{  
+            "colWidth":12,
+            "editorHide":true,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/markdown"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-154204_270699871",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"HTML",
+            "msg":"<h3>Flink integration</h3>\n<p>We first initialise the uiElement, by creating a instance of the ui-element class.\n<br  />Than we use this object as a Flink Sink in our job.</p>\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:46:00+0100",
+         "dateFinished":"2016-10-31T16:46:00+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:156"
+      },
+      {  
+         "text":"%flink \nimport org.apache.flink.streaming.api.windowing.assigners._\n\n// create uiElement\nval uiElement = new OwnUIElement()\n\n// senv = Flink Stream Environment\nval stream = senv.addSource(flinkSource) // Add the Flink Source\nval windowedStream = stream\n                    .windowAll(TumblingProcessingTimeWindows.of(Time.seconds(1)))\n                    .reduce { (v1, v2) => (v2) }\n\n// use the uiElement as Sink\nwindowedStream.addSink(uiElement.getSink())\n",
+         "dateUpdated":"2016-10-31T16:39:03+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-154220_1908746193",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<element-name></element-name>\nstream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@4dc63da5\nwindowedStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@53c01879\nres12: org.apache.flink.streaming.api.datastream.DataStreamSink[String] = org.apache.flink.streaming.api.datastream.DataStreamSink@5d1680b2\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:39:03+0100",
+         "dateFinished":"2016-10-31T16:39:04+0100",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:157"
+      },
+      {  
+         "text":"%flink\n// execute Flink Job.\n// This is a blocking call, so it can make sense to palce it in an own paragraph. \nsenv.execute() ",
+         "dateUpdated":"2016-10-31T16:39:21+0100",
+         "config":{  
+            "colWidth":6,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483287_-1610282800",
+         "id":"20161031-153300_1663132042",
+         "result":{  
+            "code":"ERROR",
+            "type":"TEXT",
+            "msg":"Submitting job with JobID: 2434279f9f83ce066db9de9400147063. Waiting for job completion.\n10/31/2016 16:39:22\tJob execution switched to status RUNNING.\n10/31/2016 16:39:22\tSource: Custom Source(1/1) switched to SCHEDULED \n10/31/2016 16:39:22\tSource: Custom Source(1/1) switched to DEPLOYING \n10/31/2016 16:39:22\tTriggerWindow(TumblingProcessingTimeWindows(1000), ReducingStateDescriptor{serializer=org.apache.flink.api.common.typeutils.base.StringSerializer@2f609dca, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@38db4f75}, ProcessingTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to SCHEDULED \n10/31/2016 16:39:22\tTriggerWindow(TumblingProcessingTimeWindows(1000), ReducingStateDescriptor{serializer=org.apache.flink.api.common.typeutils.base.StringSerializer@2f609dca, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@38db4f75}, ProcessingTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to DEPLOYING \n10/31/2016 16:39:22\tSink: Unnamed(1/1) switched to SCHEDULED \n10/31/2016 16:39:22\tSink: Unnamed(1/1) switched to DEPLOYING \n10/31/2016 16:39:22\tSource: Custom Source(1/1) switched to RUNNING \n10/31/2016 16:39:22\tSink: Unnamed(1/1) switched to RUNNING \n10/31/2016 16:39:22\tTriggerWindow(TumblingProcessingTimeWindows(1000), ReducingStateDescriptor{serializer=org.apache.flink.api.common.typeutils.base.StringSerializer@2f609dca, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@38db4f75}, ProcessingTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to RUNNING \n10/31/2016 16:42:41\tJob execution switched to status CANCELLING.\n10/31/2016 16:42:41\tSource: Custom Source(1/1) switched to CANCELING \n10/31/2016 16:42:41\tTriggerWindow(TumblingProcessingTimeWindows(1000), ReducingStateDescriptor{serializer=org.apache.flink.api.common.typeutils.base.StringSerializer@2f609dca, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@38db4f75}, ProcessingTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELING \n10/31/2016 16:42:41\tSink: Unnamed(1/1) switched to CANCELING \n10/31/2016 16:42:41\tTriggerWindow(TumblingProcessingTimeWindows(1000), ReducingStateDescriptor{serializer=org.apache.flink.api.common.typeutils.base.StringSerializer@2f609dca, reduceFunction=org.apache.flink.streaming.api.scala.function.util.ScalaReduceFunction@38db4f75}, ProcessingTimeTrigger(), WindowedStream.apply(AllWindowedStream.java:326))(1/1) switched to CANCELED \n10/31/2016 16:42:41\tSource: Custom Source(1/1) switched to CANCELED \n10/31/2016 16:42:41\tSink: Unnamed(1/1) switched to CANCELED \n10/31/2016 16:42:41\tJob execution switched to status CANCELED.\norg.apache.flink.client.program.ProgramInvocationException: The program execution failed: Job was cancelled.\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:413)\n\tat org.apache.flink.client.program.StandaloneClusterClient.submitJob(StandaloneClusterClient.java:92)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:389)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:381)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.executeRemotely(RemoteStreamEnvironment.java:209)\n\tat org.apache.flink.api.java.ScalaShellRemoteStreamEnvironment.executeRemotely(ScalaShellRemoteStreamEnvironment.java:87)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.execute(RemoteStreamEnvironment.java:173)\n\tat org.apache.flink.streaming.api.environment.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.java:1429)\n\tat org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.scala:576)\n\tat $$$$dba658b6ceb74467bec94a6d3099c9d3$$$.<init>(<console>:71)\n\tat $$$$dba658b6ceb74467bec94a6d3099c9d3$$$.<clinit>(<console>)\n\tat .<init>(<console>:7)\n\tat .<clinit>(<console>)\n\tat $print(<console>)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat scala.tools.nsc.interpreter.IMain$ReadEvalPrint.call(IMain.scala:734)\n\tat scala.tools.nsc.interpreter.IMain$Request.loadAndRun(IMain.scala:983)\n\tat scala.tools.nsc.interpreter.IMain.loadAndRunReq$1(IMain.scala:573)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:604)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:568)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:305)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:301)\n\tat scala.util.DynamicVariable.withValue(DynamicVariable.scala:57)\n\tat scala.Console$.withOut(Console.scala:107)\n\tat scala.Console.withOut(Console.scala)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:299)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:244)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:94)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:341)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:176)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler$1.run(FIFOScheduler.java:139)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:745)\nCaused by: org.apache.flink.runtime.client.JobCancellationException: Job was cancelled.\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply$mcV$sp(JobManager.scala:814)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.liftedTree1$1(Future.scala:24)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.run(Future.scala:24)\n\tat akka.dispatch.TaskInvocation.run(AbstractDispatcher.scala:41)\n\tat akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask.exec(AbstractDispatcher.scala:401)\n\tat scala.concurrent.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.pollAndExecAll(ForkJoinPool.java:1253)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1346)\n\tat scala.concurrent.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)\n\tat scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)\n\n"
+         },
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "dateStarted":"2016-10-31T16:39:21+0100",
+         "dateFinished":"2016-10-31T16:42:45+0100",
+         "status":"ERROR",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:158"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2016-10-31T16:46:13+0100",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":false,
+            "editorHide":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1477926483288_-1612206544",
+         "id":"20161031-155250_1332299522",
+         "dateCreated":"2016-10-31T16:08:03+0100",
+         "status":"READY",
+         "errorMessage":"",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:159"
+      }
+   ],
+   "name":"Simple Demo",
+   "id":"2C18XSB5R",
+   "lastReplName":{  
+      "value":"md"
+   },
+   "angularObjects":{  
+      "2BZN526HM:shared_process":[  
+
+      ],
+      "2BYWMAS8V:shared_process":[  
+
+      ],
+      "2C286CJYW:shared_process":[  
+
+      ],
+      "2BZW7RNC2:shared_process":[  
+
+      ],
+      "2BZ953XUF:shared_process":[  
+
+      ],
+      "2C16A8K3K:shared_process":[  
+
+      ],
+      "2BZX1PFXA:shared_process":[  
+
+      ],
+      "2BZ4QC1WB:shared_process":[  
+
+      ],
+      "2C1E65YZB:shared_process":[  
+
+      ],
+      "2BZ35UUCQ:shared_process":[  
+
+      ],
+      "2BYKQP66F:shared_process":[  
+
+      ],
+      "2BYX2CD91:shared_process":[  
+
+      ],
+      "2BYNP3HBM:shared_process":[  
+
+      ],
+      "2C2JEMP6G:shared_process":[  
+
+      ],
+      "2C1XDY56N:shared_process":[  
+
+      ],
+      "2BYJ5BQF2:shared_process":[  
+         {  
+            "name":"itemHandler",
+            "object":"64,10950125910494696,29759,-16696,-176,238967,2122851,1755,9532,2461,-2355,-9716,209",
+            "noteId":"2C18XSB5R",
+            "paragraphId":"20161031-154220_1908746193"
+         }
+      ],
+      "2BZ6V5VJA:shared_process":[  
+
+      ]
+   },
+   "config":{  
+      "looknfeel":"default"
+   },
+   "info":{  
+
+   }
+}

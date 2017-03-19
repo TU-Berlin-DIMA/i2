@@ -1,0 +1,1338 @@
+{  
+   "paragraphs":[  
+      {  
+         "text":"%flink\nimport org.apache.flink.streaming.api.functions.source._;\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext;\nimport org.apache.flink.api.common.typeinfo.TypeInformation;\n\nimport scala.io.Source\n\n\nclass FileSource extends RichSourceFunction[String]() with StoppableFunction{\n    var startSystemTime = System.nanoTime();\n    var startDataTime = 10753295594424116L;\n    var stoped = false;\n    \n    def shiftIterator(fileIterator : Iterator[String] ): Unit = {\n        \n        var line = fileIterator.next()\n        var lineDataTimestamp = line.split(\",\")(1).toLong;\n        \n        while(lineDataTimestamp<=startDataTime){\n            line = fileIterator.next()\n            lineDataTimestamp = line.split(\",\")(1).toLong;\n        }\n    }\n    \n    def run(sc: SourceContext[String]): Unit = {\n        var fileIterator = scala.tools.nsc.io.File(\"debs2013.data\").lines();\n        \n        shiftIterator(fileIterator)\n        startSystemTime = System.nanoTime();\n        \n        for(line <-scala.tools.nsc.io.File(\"debs2013.data\").lines()){\n            \n            if(Thread.interrupted() || stoped){\n                return\n            }\n            var dataTimestamp = line.split(\",\")(1).toLong;\n            if(dataTimestamp > startDataTime){\n                var elapsedSystemTime = System.nanoTime() - startSystemTime;\n                var elapsedDataTime = (dataTimestamp - startDataTime) / 1000; // picoseconds to nanoseconds\n                while(elapsedDataTime > elapsedSystemTime && !Thread.interrupted()){\n                    elapsedSystemTime = System.nanoTime() - startSystemTime;\n                    // active waiting for time\n                } \n                //Thread.sleep(10)\n                sc.collect(line);\n            }\n        }\n    }\n    \n    def stop() : Unit= {\n        stoped = true \n    }\n    \n      def cancel() : Unit= {\n        stoped = true \n    }\n\n}\n\nvar fs = new FileSource()\n",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397151995_-949223265",
+         "id":"20161024-131244_560500484",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.functions.source._\nimport org.apache.flink.streaming.api.functions.source.SourceFunction.SourceContext\nimport org.apache.flink.api.common.typeinfo.TypeInformation\nimport scala.io.Source\ndefined class FileSource\nfs: FileSource = $$$$241eec3118ee3f2cbf9d8fddb42a1813$$$$FileSource@59f7234e\n"
+         },
+         "dateCreated":"2017-03-13T09:25:51+0000",
+         "dateStarted":"2017-03-13T12:38:26+0000",
+         "dateFinished":"2017-03-13T12:38:28+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:92"
+      },
+      {  
+         "text":"%flink\n\nimport org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\n/**\n * sid, ts, \n * x, y, z, \n * |v| in μm/s,\n * |a| is zero when the ball is at a fixed position and not 9.81 m/s²).\n * vx, vy, vz, describe direction by a vector with size of 10,000\n * ax, ay, az\n * \n * \n * Hence, the speed of the object in x-direction in SI-units (m/s) is calculated by \n *          v'x = |v| * vx * 1e-4 * 1e-6\n * \n */\n \nval players = List(\n        (1, \"Nick Gertje\", List(13,14,97,98)),\n        (2, \"Dennis Dotterweich\", List(47,16)),\n        (3, \"Niklas Waelzlein\", List(49,88)),\n        (4, \"Wili Sommer\", List(19,52)),\n        (5, \"Philipp Harlass\", List(53,54)),\n        (6, \"Roman Hartleb\", List(23,24)),\n        (7, \"Erik Engelhardt\", List(57,58)),\n        (8, \"Sandro Schneider\", List(59,28)),\n        \n        (9, \"Leon Krapf\", List(61,62,99,100)),\n        (10, \"Kevin Baer\", List(63,64)),\n        (11, \"Luca Ziegler\", List(65,66)),\n        (12, \"Ben Mueller\", List(67,68)),\n        (13, \"Vale Reitstetter\", List(69,38)),\n        (14, \"Christopher Lee\", List(71,40)),\n        (15, \"Leon Heinze\", List(73,74)),\n        (16, \"Leo Langhans\", List(75,44)),\n        \n        (17, \"Referee\", List(105, 106)),\n        (0, \"ball\", List(4, 8, 10, 12)))\n\ndef getPlayerBySid(sid:Int ): (Int, String, List[Int])={\n    return players.find(player=>player._3.contains(sid)).getOrElse((0,\"\",null));\n    \n}\n\n\ncase class DebsDataItem(sid:Int, ts:Long, x:Int, y:Int, z:Int, v:Int, a:Int , vx:Int, vy:Int, vz:Int, ax:Int, ay:Int, az:Int, nr:Int, playerName: String )\n\nvar debs2013DataStream = senv.addSource(fs)\n\nvar debsItemDataStream = debs2013DataStream.map(line=>{\n    val items = line.split(\",\")\n    DebsDataItem(\n        items(0).toInt,\n        items(1).toLong,\n        items(2).toInt,\n        items(3).toInt,\n        items(4).toInt,\n        items(5).toInt,\n        items(6).toInt,\n        items(7).toInt,\n        items(8).toInt,\n        items(9).toInt,\n        items(10).toInt,\n        items(11).toInt,\n        items(12).toInt,\n        getPlayerBySid(items(0).toInt)._1,\n        getPlayerBySid(items(0).toInt)._2\n        )\n})\n\n",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397151998_-950377511",
+         "id":"20161024-131307_1409150352",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.TimeCharacteristic\nimport org.apache.flink.streaming.api.functions._\nimport org.apache.flink.streaming.api.watermark._\nplayers: List[(Int, String, List[Int])] = List((1,Nick Gertje,List(13, 14, 97, 98)), (2,Dennis Dotterweich,List(47, 16)), (3,Niklas Waelzlein,List(49, 88)), (4,Wili Sommer,List(19, 52)), (5,Philipp Harlass,List(53, 54)), (6,Roman Hartleb,List(23, 24)), (7,Erik Engelhardt,List(57, 58)), (8,Sandro Schneider,List(59, 28)), (9,Leon Krapf,List(61, 62, 99, 100)), (10,Kevin Baer,List(63, 64)), (11,Luca Ziegler,List(65, 66)), (12,Ben Mueller,List(67, 68)), (13,Vale Reitstetter,List(69, 38)), (14,Christopher Lee,List(71, 40)), (15,Leon Heinze,List(73, 74)), (16,Leo Langhans,List(75, 44)), (17,Referee,List(105, 106)), (0,ball,List(4, 8, 10, 12)))\ngetPlayerBySid: (sid: Int)(Int, String, List[Int])\ndefined class DebsDataItem\ndebs2013DataStream: org.apache.flink.streaming.api.scala.DataStream[String] = org.apache.flink.streaming.api.scala.DataStream@1778c628\ndebsItemDataStream: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@7ae3b79a\n"
+         },
+         "dateCreated":"2017-03-13T09:25:51+0000",
+         "dateStarted":"2017-03-13T12:38:26+0000",
+         "dateFinished":"2017-03-13T12:38:32+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:93"
+      },
+      {  
+         "text":"%flink\nimport org.apache.zeppelin.flink.ui._;\nimport java.util.LinkedList;\nclass ListViewUi(maxItems:Int = 20) extends UIComponent[String,Any](classOf[Any]) {\n   var  list = new LinkedList[String]();\n   scope.remove(\"content\")\n\n   override def invoke(dataItem:String) = {\n     list.add(dataItem.toString)  \n     if(list.size > maxItems){\n         list.removeFirst()\n     }\n     scope.put(\"content\" , list);\n   }\n   \n   def getTemplate(): String = {\n       \"<div ng-repeat='item in content track by $index'>{{$index}}. {{item}}</div>\"\n   }\n}",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397151999_-950762260",
+         "id":"20161024-124226_1977433757",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.zeppelin.flink.ui._\nimport java.util.LinkedList\ndefined class ListViewUi\n"
+         },
+         "dateCreated":"2017-03-13T09:25:51+0000",
+         "dateStarted":"2017-03-13T12:38:29+0000",
+         "dateFinished":"2017-03-13T12:38:34+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:94"
+      },
+      {  
+         "text":"%flink \nimport scala.collection.JavaConverters._\nimport org.apache.zeppelin.flink.ui._;\nimport org.apache.zeppelin.flink.FlinkInterpreter;\n\nclass FootballFieldUi() extends UIComponent[List[(Int,Int,Int,Boolean)],Any](classOf[Any]) {\n\n   logger.info(\"Start SoccerFieldUi\");\n   scope.remove(\"point2\")\n   \n   override def invoke(item:List[(Int,Int,Int,Boolean)]): Unit = {\n       scope.put(\"point2\" , item.asJava);\n   }\n   \n   def getTemplate(): String = {\n       \"<i2-football-field></i2-football-field>\"\n   }\n}\n",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152000_-866502251",
+         "id":"20170312-102113_1173465066",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import scala.collection.JavaConverters._\nimport org.apache.zeppelin.flink.ui._\nimport org.apache.zeppelin.flink.FlinkInterpreter\ndefined class FootballFieldUi\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:32+0000",
+         "dateFinished":"2017-03-13T12:38:36+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:95"
+      },
+      {  
+         "text":"%angular   \n\n<style>\n    .line {\n        fill: none;\n        stroke: #000;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n</style>\n\n<script>\nzeppelin.addComponent(\n    \"i2FootballField\",\n    \"<?xml version='1.0' standalone='no?'>\"+ \n\"<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' \"+ \n  \"'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'>\"+ \n  \"<svg width='1268px' height='808px' viewBox='0 0 1150 720' stroke='white' version='1.1'\"+\n\"     xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>\"+\n\"    <rect x='0' y='0' width='1150' height='720' fill='green' />\"+\n\"    <path d='M 575,20 L 50,20 50,700 1100,700 1100,20 575,20 575,700 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <circle cx='575' cy='360' r='91.5' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <circle cx='575' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <circle cx='160' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <circle cx='990' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <path d='M 50,324.4 L 40,324.4 40, 396.6 50 396.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,324.4 L 1110,324.4 1110,396.6 1100,396.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 50,269.4 L 105,269.4 105,451.6 50 451.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,269.4 L 1045,269.4 1045,451.6 1100,451.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 50,159.4 L 215,159.4 215,561.6 50 561.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,159.4 L 935,159.4 935,561.6 1100,561.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 215,286.875 A 91.5,91.5 0 0,1 215,433.125 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <path d='M 935,286.875 A 91.5,91.5 0 0,0 935,433.125 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <path d='M 50,30 A 10,10 0 0,0 60,20 L 50,20 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 60,700 A 10,10 0 0,0 50,690 L 50,700 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,690 A 10,10 0 0,0 1090,700 L 1100,700 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1090,20 A 10,10 0 0,0 1100,30 L 1100,20 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"</svg>\", \n    function(scope, element) {\n       \n        element.addClass('block');\n        \n        var points = []\n        \n        var scale = 0.7;\n        var dataTopLeftX = 0;\n        var dataWidth = 52489;\n        var dataTopLeftY = -33960;\n        var dataHeight = 67930;\n\n        viewHeight = 690;\n        viewWidth = 1050;\n    \n        var svg = d3.select($(element).children(\"svg\")[0])\n        \n        var sidsTeamA = [13,14,97,98,47,16,49,88,19,52,53,54,23,24,57,58,59,28]\n        var sidsTeamB = [61,62,99,100,63,64,65,66,67,68,69,38,71,40,73,74,75,44]\n        var sensorGroups = [ [13,14,97,98],  [47,16], [49,88], [19,52],    [53,54],  [23,24],\n          [57,58],  [59,28], [61,62,99,100],    [63,64],  [65,66],    [67,68],  [69,38],   [71,40], [73,74],[75,44]];\n        function unitsPerPixel() {\n            return {\n                width: dataHeight / viewWidth,\n                height: dataWidth / viewHeight\n            }\n        }\n\n        function mapPoint(point) {\n            var unitPerPixcel = unitsPerPixel()\n            return {\n                y: ((point.x) / unitPerPixcel.height)+15,\n                x: ((point.y + 33960) / unitPerPixcel.width ) +50,\n            }\n        }\n        \n        var requested = false;\n        \n        function addPoint(point) {\n            var cordinates = mapPoint(point);\n            var id = point.id;\n            if(points[id] == undefined)\n                points[id] = point\n             points[id].cordinates = cordinates;\n             points[id].selected = point.selected\n        }\n        \n     \n        \n        var stop = false;\n        function draw() {\n          \n          for(var i = 0; i<points.length;i++){\n            if(points[i] != undefined){\n                var point = points[i];\n                if(point.svg == undefined){\n                    point.svg = svg.append(\"circle\")\n                                .attr(\"r\", 10)\n                                .attr(\"id\", i)\n                                \n                }\n                point.svg\n                        .attr(\"cx\", point.cordinates.x)\n                        .attr(\"cy\", point.cordinates.y)\n                        .style(\"fill\", getColor(point));\n            }\n          }\n        }\n        \n        function isBallEvent(point){\n            return point.id==4 || point.id==8 || point.id==10 || point.id== 12;\n        }\n        \n        function isSelected(event){\n            return event.selected ||currentGroup.indexOf(event.id)!=-1;\n        }\n        \n        function isTeamA(event){\n            return  sidsTeamA.indexOf(event.id)!=-1;\n        }\n         function isTeamB(event){\n            return  sidsTeamB.indexOf(event.id)!=-1;\n        }\n        \n        function getColor(event){\n            if(isBallEvent(event)){\n                return \"white\"\n            }\n            else if(isSelected(event)){\n                console.log(event.id)\n                return \"red\";\n            }\n            else if(isTeamA(event)){\n                 return \"blue\"\n            }else if(isTeamB(event)){\n                 return \"orange\"\n            }\n            else{\n                return \"black\"\n            }\n        }\n        \n        var currentGroup = sensorGroups[0];\n       \n        var init = false;\n        var remove = scope.$watch('point2', function(newPoinsts, oldValue) {\n            //console.log(newPoinsts)\n            if(newPoinsts!=undefined)\n                newPoinsts.forEach(function(newPoinst){\n                    if(newPoinst._4){\n                        currentGroup= sensorGroups.find(function(group){return group.indexOf(newPoinst._1)!=-1})\n                    }\n                    addPoint({id:newPoinst._1,x:newPoinst._2,y:newPoinst._3,selected:newPoinst._4})\n                })\n             window.requestAnimationFrame(draw); \n        });\n        \n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n       \n    })\n</script>\n",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152001_-866887000",
+         "id":"20170312-102109_1598927237",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"<style>\n    .line {\n        fill: none;\n        stroke: #000;\n        stroke-width: 1.5px;\n    }\n    .block{\n        height: 300px;\n        display: block;\n    }\n</style>\n\n<script>\nzeppelin.addComponent(\n    \"i2FootballField\",\n    \"<?xml version='1.0' standalone='no?'>\"+ \n\"<!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' \"+ \n  \"'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'>\"+ \n  \"<svg width='1268px' height='808px' viewBox='0 0 1150 720' stroke='white' version='1.1'\"+\n\"     xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>\"+\n\"    <rect x='0' y='0' width='1150' height='720' fill='green' />\"+\n\"    <path d='M 575,20 L 50,20 50,700 1100,700 1100,20 575,20 575,700 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <circle cx='575' cy='360' r='91.5' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <circle cx='575' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <circle cx='160' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <circle cx='990' cy='360' r='2' stroke='white' fill='white' />\"+\n\"    <path d='M 50,324.4 L 40,324.4 40, 396.6 50 396.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,324.4 L 1110,324.4 1110,396.6 1100,396.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 50,269.4 L 105,269.4 105,451.6 50 451.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,269.4 L 1045,269.4 1045,451.6 1100,451.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 50,159.4 L 215,159.4 215,561.6 50 561.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,159.4 L 935,159.4 935,561.6 1100,561.6 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 215,286.875 A 91.5,91.5 0 0,1 215,433.125 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <path d='M 935,286.875 A 91.5,91.5 0 0,0 935,433.125 z' stroke='white' stroke-width='3' fill='green' />\"+\n\"    <path d='M 50,30 A 10,10 0 0,0 60,20 L 50,20 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 60,700 A 10,10 0 0,0 50,690 L 50,700 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1100,690 A 10,10 0 0,0 1090,700 L 1100,700 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"    <path d='M 1090,20 A 10,10 0 0,0 1100,30 L 1100,20 z' stroke='white' stroke-width='3' fill-opacity='0' />\"+\n\"</svg>\", \n    function(scope, element) {\n       \n        element.addClass('block');\n        \n        var points = []\n        \n        var scale = 0.7;\n        var dataTopLeftX = 0;\n        var dataWidth = 52489;\n        var dataTopLeftY = -33960;\n        var dataHeight = 67930;\n\n        viewHeight = 690;\n        viewWidth = 1050;\n    \n        var svg = d3.select($(element).children(\"svg\")[0])\n        \n        var sidsTeamA = [13,14,97,98,47,16,49,88,19,52,53,54,23,24,57,58,59,28]\n        var sidsTeamB = [61,62,99,100,63,64,65,66,67,68,69,38,71,40,73,74,75,44]\n        var sensorGroups = [ [13,14,97,98],  [47,16], [49,88], [19,52],    [53,54],  [23,24],\n          [57,58],  [59,28], [61,62,99,100],    [63,64],  [65,66],    [67,68],  [69,38],   [71,40], [73,74],[75,44]];\n        function unitsPerPixel() {\n            return {\n                width: dataHeight / viewWidth,\n                height: dataWidth / viewHeight\n            }\n        }\n\n        function mapPoint(point) {\n            var unitPerPixcel = unitsPerPixel()\n            return {\n                y: ((point.x) / unitPerPixcel.height)+15,\n                x: ((point.y + 33960) / unitPerPixcel.width ) +50,\n            }\n        }\n        \n        var requested = false;\n        \n        function addPoint(point) {\n            var cordinates = mapPoint(point);\n            var id = point.id;\n            if(points[id] == undefined)\n                points[id] = point\n             points[id].cordinates = cordinates;\n             points[id].selected = point.selected\n        }\n        \n     \n        \n        var stop = false;\n        function draw() {\n          \n          for(var i = 0; i<points.length;i++){\n            if(points[i] != undefined){\n                var point = points[i];\n                if(point.svg == undefined){\n                    point.svg = svg.append(\"circle\")\n                                .attr(\"r\", 10)\n                                .attr(\"id\", i)\n                                \n                }\n                point.svg\n                        .attr(\"cx\", point.cordinates.x)\n                        .attr(\"cy\", point.cordinates.y)\n                        .style(\"fill\", getColor(point));\n            }\n          }\n        }\n        \n        function isBallEvent(point){\n            return point.id==4 || point.id==8 || point.id==10 || point.id== 12;\n        }\n        \n        function isSelected(event){\n            return event.selected ||currentGroup.indexOf(event.id)!=-1;\n        }\n        \n        function isTeamA(event){\n            return  sidsTeamA.indexOf(event.id)!=-1;\n        }\n         function isTeamB(event){\n            return  sidsTeamB.indexOf(event.id)!=-1;\n        }\n        \n        function getColor(event){\n            if(isBallEvent(event)){\n                return \"white\"\n            }\n            else if(isSelected(event)){\n                console.log(event.id)\n                return \"red\";\n            }\n            else if(isTeamA(event)){\n                 return \"blue\"\n            }else if(isTeamB(event)){\n                 return \"orange\"\n            }\n            else{\n                return \"black\"\n            }\n        }\n        \n        var currentGroup = sensorGroups[0];\n       \n        var init = false;\n        var remove = scope.$watch('point2', function(newPoinsts, oldValue) {\n            //console.log(newPoinsts)\n            if(newPoinsts!=undefined)\n                newPoinsts.forEach(function(newPoinst){\n                    if(newPoinst._4){\n                        currentGroup= sensorGroups.find(function(group){return group.indexOf(newPoinst._1)!=-1})\n                    }\n                    addPoint({id:newPoinst._1,x:newPoinst._2,y:newPoinst._3,selected:newPoinst._4})\n                })\n             window.requestAnimationFrame(draw); \n        });\n        \n        scope.$on('clean', function() {\n            remove()\n            stop = true;\n        });\n       \n    })\n</script>"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:26+0000",
+         "dateFinished":"2017-03-13T12:38:26+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:96"
+      },
+      {  
+         "text":"%flink \nimport org.apache.flink.streaming.api.functions.co.CoFlatMapFunction\nimport org.apache.flink.util.Collector\nvar balls = List(4,8,10,12)\nvar activeBallStream = debsItemDataStream.filter(dataItem=> dataItem.nr == 0 && dataItem.v != 0)\nvar playerStream = debsItemDataStream.filter(dataItem=> dataItem.nr != 0 && dataItem.nr != 17 )\n\nvar connectedStreams = playerStream.connect(activeBallStream);\n\nvar distanceToBallStream = connectedStreams.flatMap {\n    new CoFlatMapFunction[DebsDataItem, DebsDataItem, (Double,DebsDataItem,Boolean)] {\n        \n    var ballPossition:DebsDataItem = null;\n    var playerPossition: DebsDataItem = null;\n    \n    override def flatMap2(elem: DebsDataItem, collector: Collector[(Double,DebsDataItem,Boolean)]): Unit = {\n        if(elem == null)\n            return;\n        \n        if(elem.x < 0 || elem.x > 52577 || elem.y > 33965 || elem.y < -33965 ){\n        }else{\n            ballPossition = elem;\n        }\n    }\n\n    override def flatMap1(player: DebsDataItem, collector: Collector[(Double,DebsDataItem,Boolean)]): Unit = {\n        if(player == null || ballPossition==null)\n            return;\n        if(playerPossition== null || player.nr != playerPossition.nr){\n            // ball is near and \n            if (distance(player) < 700  && ballPossition.a > 55){\n                playerPossition = player;\n            }\n        }\n        \n        collector.collect((distance(player),player,playerPossition!=null && playerPossition.nr == player.nr))\n    }\n \n    \n    def distance(player:DebsDataItem): Double = {\n        if(ballPossition!=null){        \n            val xDiff = ballPossition.x - player.x;\n            val yDiff = ballPossition.y - player.y;\n            var distance = Math.sqrt((Math.pow(xDiff,2) + Math.pow(yDiff,2)))\n            return distance;\n        }\n        return 1000000;\n    }\n}}",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "lineNumbers":true,
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152001_-866887000",
+         "id":"20161024-134603_1763583195",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction\nimport org.apache.flink.util.Collector\nballs: List[Int] = List(4, 8, 10, 12)\nactiveBallStream: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@640e018b\nplayerStream: org.apache.flink.streaming.api.scala.DataStream[DebsDataItem] = org.apache.flink.streaming.api.scala.DataStream@535902a5\nconnectedStreams: org.apache.flink.streaming.api.scala.ConnectedStreams[DebsDataItem,DebsDataItem] = org.apache.flink.streaming.api.scala.ConnectedStreams@77b08c67\ndistanceToBallStream: org.apache.flink.streaming.api.scala.DataStream[(Double, DebsDataItem, Boolean)] = org.apache.flink.streaming.api.scala.DataStream@2039d8a\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:34+0000",
+         "dateFinished":"2017-03-13T12:38:40+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:97"
+      },
+      {  
+         "text":"%flink \nvar soccerField = new FootballFieldUi()",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152002_-865732753",
+         "id":"20170312-102218_1864970106",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<i2-football-field></i2-football-field>\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:37+0000",
+         "dateFinished":"2017-03-13T12:38:40+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:98"
+      },
+      {  
+         "text":"%flink \nimport org.apache.flink.streaming.api.windowing.assigners._;\n\nvar time = TumblingProcessingTimeWindows.of(Time.milliseconds(100));\nvar mappedBallStream = distanceToBallStream\n    .map(tuple=>(tuple._2.sid, tuple._2.ts, tuple._2.x, tuple._2.y, tuple._3));\n\nvar fieldStream = activeBallStream\n    .map(ball=>(ball.sid, ball.ts, ball.x, ball.y,false))\n    .union(mappedBallStream)\n    .keyBy(0)\n    .window(time)\n    .maxBy(1)\n    .map(player=>(player._1, player._3,player._4,player._5 ))\n    .windowAll(time)\n    \nvar fileFold =  fieldStream.fold(List.empty[(Int, Int, Int,Boolean)]) { (acc, v) =>  v :: acc}\nfileFold.addSink(soccerField.getSink).name(\"Fotballfield\")",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152002_-865732753",
+         "id":"20170312-102211_2105249954",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":"import org.apache.flink.streaming.api.windowing.assigners._\ntime: org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows = TumblingProcessingTimeWindows(100)\nmappedBallStream: org.apache.flink.streaming.api.scala.DataStream[(Int, Long, Int, Int, Boolean)] = org.apache.flink.streaming.api.scala.DataStream@1d37632c\nfieldStream: org.apache.flink.streaming.api.scala.AllWindowedStream[(Int, Int, Int, Boolean),org.apache.flink.streaming.api.windowing.windows.TimeWindow] = org.apache.flink.streaming.api.scala.AllWindowedStream@11d130f1\nfileFold: org.apache.flink.streaming.api.scala.DataStream[List[(Int, Int, Int, Boolean)]] = org.apache.flink.streaming.api.scala.DataStream@5b2c5639\nres71: org.apache.flink.streaming.api.datastream.DataStreamSink[List[(Int, Int, Int, Boolean)]] = org.apache.flink.streaming.api.datastream.DataStreamSink@cd08ae0\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:40+0000",
+         "dateFinished":"2017-03-13T12:38:45+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:99"
+      },
+      {  
+         "text":"%flink \n\nvar listView = new ListViewUi()\ndistanceToBallStream.map(x=>x.toString).addSink(listView.getSink)",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":false
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152002_-865732753",
+         "id":"20161024-133021_621871277",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"ANGULAR",
+            "msg":"\n<div ng-repeat='item in content track by $index'>{{$index}}. {{item}}</div>\nres56: org.apache.flink.streaming.api.datastream.DataStreamSink[String] = org.apache.flink.streaming.api.datastream.DataStreamSink@67c84db6\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "status":"READY",
+         "errorMessage":"",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:100"
+      },
+      {  
+         "text":"%flink \nsenv.execute()",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152003_-866117502",
+         "id":"20161024-144635_345249717",
+         "result":{  
+            "code":"ERROR",
+            "type":"TEXT",
+            "msg":"Submitting job with JobID: 116219aeb64039c7d9bb53d5e076c289. Waiting for job completion.\n03/13/2017 12:38:57\tJob execution switched to status RUNNING.\n03/13/2017 12:38:57\tSource: Custom Source(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tSource: Custom Source(1/1) switched to DEPLOYING \n03/13/2017 12:38:57\tMap -> (Filter -> Map, Filter)(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tMap -> (Filter -> Map, Filter)(1/1) switched to DEPLOYING \n03/13/2017 12:38:57\tCo-Flat Map -> Map(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tCo-Flat Map -> Map(1/1) switched to DEPLOYING \n03/13/2017 12:38:57\tFast TumblingProcessingTimeWindows(100) of WindowedStream.aggregate(WindowedStream.scala:428) -> Map(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tFast TumblingProcessingTimeWindows(100) of WindowedStream.aggregate(WindowedStream.scala:428) -> Map(1/1) switched to DEPLOYING \n03/13/2017 12:38:57\tTriggerWindow(TumblingProcessingTimeWindows(100), FoldingStateDescriptor{serializer=null, initialValue=List(), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@358ca800}, ProcessingTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tTriggerWindow(TumblingProcessingTimeWindows(100), FoldingStateDescriptor{serializer=null, initialValue=List(), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@358ca800}, ProcessingTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to DEPLOYING \n03/13/2017 12:38:57\tSink: Fotballfield(1/1) switched to SCHEDULED \n03/13/2017 12:38:57\tSink: Fotballfield(1/1) switched to DEPLOYING \n03/13/2017 12:38:58\tSink: Fotballfield(1/1) switched to RUNNING \n03/13/2017 12:38:58\tFast TumblingProcessingTimeWindows(100) of WindowedStream.aggregate(WindowedStream.scala:428) -> Map(1/1) switched to RUNNING \n03/13/2017 12:38:58\tCo-Flat Map -> Map(1/1) switched to RUNNING \n03/13/2017 12:38:58\tTriggerWindow(TumblingProcessingTimeWindows(100), FoldingStateDescriptor{serializer=null, initialValue=List(), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@358ca800}, ProcessingTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to RUNNING \n03/13/2017 12:38:58\tMap -> (Filter -> Map, Filter)(1/1) switched to RUNNING \n03/13/2017 12:38:58\tSource: Custom Source(1/1) switched to RUNNING \n03/13/2017 12:43:25\tJob execution switched to status CANCELLING.\n03/13/2017 12:43:25\tSource: Custom Source(1/1) switched to CANCELING \n03/13/2017 12:43:25\tMap -> (Filter -> Map, Filter)(1/1) switched to CANCELING \n03/13/2017 12:43:25\tCo-Flat Map -> Map(1/1) switched to CANCELING \n03/13/2017 12:43:25\tFast TumblingProcessingTimeWindows(100) of WindowedStream.aggregate(WindowedStream.scala:428) -> Map(1/1) switched to CANCELING \n03/13/2017 12:43:25\tTriggerWindow(TumblingProcessingTimeWindows(100), FoldingStateDescriptor{serializer=null, initialValue=List(), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@358ca800}, ProcessingTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELING \n03/13/2017 12:43:25\tSink: Fotballfield(1/1) switched to CANCELING \n03/13/2017 12:43:25\tMap -> (Filter -> Map, Filter)(1/1) switched to CANCELED \n03/13/2017 12:43:25\tTriggerWindow(TumblingProcessingTimeWindows(100), FoldingStateDescriptor{serializer=null, initialValue=List(), foldFunction=org.apache.flink.streaming.api.scala.function.util.ScalaFoldFunction@358ca800}, ProcessingTimeTrigger(), WindowedStream.fold(AllWindowedStream.java:223))(1/1) switched to CANCELED \n03/13/2017 12:43:25\tSource: Custom Source(1/1) switched to CANCELED \n03/13/2017 12:43:25\tCo-Flat Map -> Map(1/1) switched to CANCELED \n03/13/2017 12:43:25\tSink: Fotballfield(1/1) switched to CANCELED \n03/13/2017 12:43:25\tFast TumblingProcessingTimeWindows(100) of WindowedStream.aggregate(WindowedStream.scala:428) -> Map(1/1) switched to CANCELED \n03/13/2017 12:43:25\tJob execution switched to status CANCELED.\norg.apache.flink.client.program.ProgramInvocationException: The program execution failed: Job was cancelled.\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:413)\n\tat org.apache.flink.client.program.StandaloneClusterClient.submitJob(StandaloneClusterClient.java:92)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:389)\n\tat org.apache.flink.client.program.ClusterClient.run(ClusterClient.java:381)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.executeRemotely(RemoteStreamEnvironment.java:209)\n\tat org.apache.flink.api.java.ScalaShellRemoteStreamEnvironment.executeRemotely(ScalaShellRemoteStreamEnvironment.java:87)\n\tat org.apache.flink.streaming.api.environment.RemoteStreamEnvironment.execute(RemoteStreamEnvironment.java:173)\n\tat org.apache.flink.streaming.api.environment.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.java:1429)\n\tat org.apache.flink.streaming.api.scala.StreamExecutionEnvironment.execute(StreamExecutionEnvironment.scala:576)\n\tat $$$$4ca0d2a71d130cd8a133805d90ecf0$$$.<init>(<console>:225)\n\tat $$$$4ca0d2a71d130cd8a133805d90ecf0$$$.<clinit>(<console>)\n\tat .<init>(<console>:7)\n\tat .<clinit>(<console>)\n\tat $print(<console>)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat scala.tools.nsc.interpreter.IMain$ReadEvalPrint.call(IMain.scala:734)\n\tat scala.tools.nsc.interpreter.IMain$Request.loadAndRun(IMain.scala:983)\n\tat scala.tools.nsc.interpreter.IMain.loadAndRunReq$1(IMain.scala:573)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:604)\n\tat scala.tools.nsc.interpreter.IMain.interpret(IMain.scala:568)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:305)\n\tat org.apache.zeppelin.flink.FlinkInterpreter$1.apply(FlinkInterpreter.java:301)\n\tat scala.util.DynamicVariable.withValue(DynamicVariable.scala:57)\n\tat scala.Console$.withOut(Console.scala:107)\n\tat scala.Console.withOut(Console.scala)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:299)\n\tat org.apache.zeppelin.flink.FlinkInterpreter.interpret(FlinkInterpreter.java:244)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:94)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:341)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:176)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler$1.run(FIFOScheduler.java:139)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:745)\nCaused by: org.apache.flink.runtime.client.JobCancellationException: Job was cancelled.\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply$mcV$sp(JobManager.scala:814)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat org.apache.flink.runtime.jobmanager.JobManager$$anonfun$handleMessage$1$$anonfun$applyOrElse$8.apply(JobManager.scala:768)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.liftedTree1$1(Future.scala:24)\n\tat scala.concurrent.impl.Future$PromiseCompletingRunnable.run(Future.scala:24)\n\tat akka.dispatch.TaskInvocation.run(AbstractDispatcher.scala:41)\n\tat akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask.exec(AbstractDispatcher.scala:401)\n\tat scala.concurrent.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.pollAndExecAll(ForkJoinPool.java:1253)\n\tat scala.concurrent.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1346)\n\tat scala.concurrent.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)\n\tat scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)\n\n"
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:41+0000",
+         "dateFinished":"2017-03-13T12:43:25+0000",
+         "status":"ERROR",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:101",
+         "focus":true
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152004_-868041247",
+         "id":"20161024-145630_702040925",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:38:46+0000",
+         "dateFinished":"2017-03-13T12:43:25+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:102"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "editorMode":"ace/mode/scala",
+            "editorHide":false,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152004_-868041247",
+         "id":"20161024-152542_2099012122",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:43:25+0000",
+         "dateFinished":"2017-03-13T12:43:25+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:103"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:26+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152005_-868425996",
+         "id":"20170312-092232_1793418021",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:43:25+0000",
+         "dateFinished":"2017-03-13T12:43:25+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:104"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152005_-868425996",
+         "id":"20170312-092329_312912137",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:105"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152005_-868425996",
+         "id":"20170312-101415_1465220294",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:106"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397152006_-867271749",
+         "id":"20170312-104613_1467365812",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:25:52+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:107"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489397194650_-1093626696",
+         "id":"20170313-092634_344580238",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         },
+         "dateCreated":"2017-03-13T09:26:34+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:108"
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true,
+            "editorMode":"ace/mode/scala"
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489401040544_-1927187920",
+         "id":"20170313-103040_703475750",
+         "dateCreated":"2017-03-13T10:30:40+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "$$hashKey":"object:109",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         }
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489408089092_871947266",
+         "id":"20170313-122809_1371572964",
+         "dateCreated":"2017-03-13T12:28:09+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "focus":true,
+         "$$hashKey":"object:1469",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         }
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489408168748_1129819329",
+         "id":"20170313-122928_582550443",
+         "dateCreated":"2017-03-13T12:29:28+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "focus":true,
+         "$$hashKey":"object:1601",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         }
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489408220291_-42449273",
+         "id":"20170313-123020_1111632531",
+         "dateCreated":"2017-03-13T12:30:20+0000",
+         "status":"FINISHED",
+         "progressUpdateIntervalMs":500,
+         "focus":true,
+         "$$hashKey":"object:1744",
+         "dateFinished":"2017-03-13T12:43:26+0000",
+         "dateStarted":"2017-03-13T12:43:26+0000",
+         "result":{  
+            "code":"SUCCESS",
+            "type":"TEXT",
+            "msg":""
+         }
+      },
+      {  
+         "text":"%flink ",
+         "dateUpdated":"2017-03-13T12:38:27+0000",
+         "config":{  
+            "colWidth":12,
+            "graph":{  
+               "mode":"table",
+               "height":300,
+               "optionOpen":false,
+               "keys":[  
+
+               ],
+               "values":[  
+
+               ],
+               "groups":[  
+
+               ],
+               "scatter":{  
+
+               }
+            },
+            "enabled":true
+         },
+         "settings":{  
+            "params":{  
+
+            },
+            "forms":{  
+
+            }
+         },
+         "jobName":"paragraph_1489408707284_-1574999376",
+         "id":"20170313-123827_45980895",
+         "dateCreated":"2017-03-13T12:38:27+0000",
+         "status":"READY",
+         "progressUpdateIntervalMs":500,
+         "focus":true,
+         "$$hashKey":"object:1882"
+      }
+   ],
+   "name":"Ball Possession",
+   "id":"2CCHA8E3M",
+   "lastReplName":{  
+      "value":"flink"
+   },
+   "angularObjects":{  
+      "2CCZ7V9RC:shared_process":[  
+
+      ],
+      "2CBMSAB18:shared_process":[  
+         {  
+            "name":"point2",
+            "object":[  
+               {  
+                  "_1":47,
+                  "_2":22571,
+                  "_3":381,
+                  "_4":false
+               },
+               {  
+                  "_1":23,
+                  "_2":20939,
+                  "_3":-2306,
+                  "_4":false
+               },
+               {  
+                  "_1":4,
+                  "_2":-4982,
+                  "_3":-35898,
+                  "_4":false
+               },
+               {  
+                  "_1":65,
+                  "_2":16756,
+                  "_3":-3272,
+                  "_4":false
+               },
+               {  
+                  "_1":68,
+                  "_2":22224,
+                  "_3":-4626,
+                  "_4":false
+               },
+               {  
+                  "_1":75,
+                  "_2":15584,
+                  "_3":4063,
+                  "_4":false
+               },
+               {  
+                  "_1":99,
+                  "_2":23691,
+                  "_3":-16468,
+                  "_4":false
+               },
+               {  
+                  "_1":8,
+                  "_2":31222,
+                  "_3":-30522,
+                  "_4":false
+               },
+               {  
+                  "_1":88,
+                  "_2":23075,
+                  "_3":618,
+                  "_4":false
+               },
+               {  
+                  "_1":63,
+                  "_2":16760,
+                  "_3":-2762,
+                  "_4":false
+               },
+               {  
+                  "_1":64,
+                  "_2":16178,
+                  "_3":-2980,
+                  "_4":false
+               },
+               {  
+                  "_1":14,
+                  "_2":25287,
+                  "_3":9341,
+                  "_4":false
+               },
+               {  
+                  "_1":10,
+                  "_2":-8916,
+                  "_3":36380,
+                  "_4":false
+               },
+               {  
+                  "_1":66,
+                  "_2":16322,
+                  "_3":-3616,
+                  "_4":false
+               },
+               {  
+                  "_1":74,
+                  "_2":22929,
+                  "_3":-2860,
+                  "_4":false
+               },
+               {  
+                  "_1":53,
+                  "_2":25857,
+                  "_3":1539,
+                  "_4":false
+               },
+               {  
+                  "_1":12,
+                  "_2":52484,
+                  "_3":6240,
+                  "_4":false
+               },
+               {  
+                  "_1":57,
+                  "_2":31068,
+                  "_3":-31495,
+                  "_4":true
+               },
+               {  
+                  "_1":54,
+                  "_2":25535,
+                  "_3":1395,
+                  "_4":false
+               },
+               {  
+                  "_1":100,
+                  "_2":24066,
+                  "_3":-16670,
+                  "_4":false
+               },
+               {  
+                  "_1":38,
+                  "_2":29491,
+                  "_3":-5314,
+                  "_4":false
+               },
+               {  
+                  "_1":67,
+                  "_2":21891,
+                  "_3":-4334,
+                  "_4":false
+               },
+               {  
+                  "_1":16,
+                  "_2":22438,
+                  "_3":-46,
+                  "_4":false
+               },
+               {  
+                  "_1":61,
+                  "_2":24009,
+                  "_3":-16661,
+                  "_4":false
+               },
+               {  
+                  "_1":49,
+                  "_2":23100,
+                  "_3":1067,
+                  "_4":false
+               },
+               {  
+                  "_1":69,
+                  "_2":29522,
+                  "_3":-5529,
+                  "_4":false
+               },
+               {  
+                  "_1":58,
+                  "_2":31269,
+                  "_3":-31095,
+                  "_4":true
+               },
+               {  
+                  "_1":73,
+                  "_2":23114,
+                  "_3":-2917,
+                  "_4":false
+               },
+               {  
+                  "_1":62,
+                  "_2":24148,
+                  "_3":-16579,
+                  "_4":false
+               },
+               {  
+                  "_1":44,
+                  "_2":15175,
+                  "_3":4008,
+                  "_4":false
+               },
+               {  
+                  "_1":13,
+                  "_2":25469,
+                  "_3":9779,
+                  "_4":false
+               },
+               {  
+                  "_1":98,
+                  "_2":25221,
+                  "_3":9539,
+                  "_4":false
+               },
+               {  
+                  "_1":28,
+                  "_2":26573,
+                  "_3":-1862,
+                  "_4":false
+               },
+               {  
+                  "_1":24,
+                  "_2":21015,
+                  "_3":-2648,
+                  "_4":false
+               },
+               {  
+                  "_1":52,
+                  "_2":24564,
+                  "_3":1371,
+                  "_4":false
+               },
+               {  
+                  "_1":71,
+                  "_2":24145,
+                  "_3":-5070,
+                  "_4":false
+               },
+               {  
+                  "_1":19,
+                  "_2":24650,
+                  "_3":1447,
+                  "_4":false
+               },
+               {  
+                  "_1":59,
+                  "_2":26140,
+                  "_3":-2475,
+                  "_4":false
+               }
+            ],
+            "noteId":"2CCHA8E3M",
+            "paragraphId":"20170312-102218_1864970106"
+         }
+      ],
+      "2CCSRKAHT:shared_process":[  
+
+      ],
+      "2CCBYAZEC:shared_process":[  
+
+      ],
+      "2CAQ11TT5:shared_process":[  
+
+      ],
+      "2CAHTU896:shared_process":[  
+
+      ],
+      "2CAVWA7JW:shared_process":[  
+
+      ],
+      "2CBB5Y87P:shared_process":[  
+
+      ],
+      "2CAJTCY1K:shared_process":[  
+
+      ],
+      "2CC8BHQ2Z:shared_process":[  
+
+      ],
+      "2CBTNR89U:shared_process":[  
+
+      ],
+      "2CD7ZFQVU:shared_process":[  
+
+      ],
+      "2CD2PVUCS:shared_process":[  
+
+      ],
+      "2CCQQQJSC:shared_process":[  
+
+      ],
+      "2CCEZJ1K2:shared_process":[  
+
+      ],
+      "2CDGXG1P9:shared_process":[  
+
+      ],
+      "2CDEKZ3T3:shared_process":[  
+
+      ]
+   },
+   "config":{  
+      "looknfeel":"default"
+   },
+   "info":{  
+
+   }
+}
