@@ -3,9 +3,19 @@
 
 This repository contains a description and a setup guide for I² - Interactive Real-Time Visualization for Streaming Data.
 - Content:
+  -	I² at EDBT 2017
   -	Introduction
   -	Setup Guide
   -	Technical Overview
+
+## I² at EDBT 2017
+I² was first published at the 20th International Conference on Extending Database Technology (EDBT) in March 2017.  
+
+**Abstract:** Developing scalable real-time data analysis programs is a challenging task. Developers need insights from the data to define meaningful analysis flows, which often makes the development a trial and error process. Data visualization techniques can provide insights to aid the development, but the sheer amount of available data frequently makes it impossible to visualize all data points at the same time. We present I², an interactive development environment that coordinates running cluster applications and corresponding visualizations such that only the currently depicted data points are processed and transferred. To this end, we present an algorithm for the real-time visualization of time series, which is proven to be correct and minimal in terms of transferred data. Moreover, we show how cluster programs can adapt to changed visualization properties at runtime to allow in teractive data exploration on data streams.  
+
+**Publication:**
+- Paper: [I²: Interactive Real-Time Visualization for Streaming Data](https://github.com/TU-Berlin-DIMA/i2/blob/master/I2-Interactive-Real-Time-Visualization-for-Streaming-Data.pdf)
+- Poster: [EDBT 2017 Poster](https://github.com/TU-Berlin-DIMA/i2/blob/master/EDBT-2017-poster.pdf)
 
 ## Introduction
 This demonstration allows for exploring our interactive I² development environment.
