@@ -4,6 +4,7 @@
 This repository contains a description and a setup guide for I² - Interactive Real-Time Visualization for Streaming Data.
 - Content:
   -	I² at EDBT 2017
+  - I² at FlinkForward 2017
   -	Introduction
   -	Setup Guide
   -	Technical Overview
@@ -16,6 +17,19 @@ I² was first published at the 20th International Conference on Extending Databa
 **Publication:**
 - Paper: [I²: Interactive Real-Time Visualization for Streaming Data](https://github.com/TU-Berlin-DIMA/i2/blob/master/I2-Interactive-Real-Time-Visualization-for-Streaming-Data.pdf)
 - Poster: [EDBT 2017 Poster](https://github.com/TU-Berlin-DIMA/i2/blob/master/EDBT-2017-poster.pdf)
+- BibTeX citation:
+```
+@inproceedings{traub2017i2,
+  title={I2: Interactive Real-Time Visualization for Streaming Data},
+  author={Traub, Jonas and Steenbergen, Nikolaas and Grulich, Philipp and Rabl, Tilmann and Markl, Volker},
+  booktitle={20th International Conference on Extending Database Technology (EDBT)},
+  pages={526--529},
+  year={2017}
+}
+```
+
+## I² at FlinkForward 2017
+We will present I² at [Flink Forward 2017 in Berlin](https://berlin.flink-forward.org/). The [I² session](https://berlin.flink-forward.org/kb_sessions/i²-interactive-real-time-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin/) will take place on Tuesday, Sep. 12, 12:00.
 
 ## Introduction
 This demonstration allows for exploring our interactive I² development environment.
