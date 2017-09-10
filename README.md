@@ -95,6 +95,7 @@ We created a simple HTML dashboard, which combines the individual UI elements fr
 **But you have to add the Zeppelin notebook ID as a hash parameter to the url.**   
 For example:  `i2-dashboard.html#<NotebookID>`
 
+![alt tag](https://github.com/TU-Berlin-DIMA/i2/blob/master/Dashboard/screenshot.png?raw=true)
 
     
 
@@ -106,7 +107,7 @@ As the same time, being a data sink, UI-Elements receive output data from the jo
 We use [RabbitMQ](https://www.rabbitmq.com/) as a message bus between Zeppelin and Flink. [RabbitMQ](https://www.rabbitmq.com/) could also be replaced by other messaging systems such as [Apache Kafka](https://kafka.apache.org/).
 
 The image below shows the interaction between the different components:
-![alt tag](https://github.com/SWC-SENSE/i2-demonstrator/blob/master/i2_diagram.jpg?raw=true)
+![alt tag](https://github.com/TU-Berlin-DIMA/i2/blob/master/i2_diagram.jpg?raw=true)
 
 ### Example:
 The following example explains the different components of I².
