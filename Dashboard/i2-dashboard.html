@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script >
+        function load() {
+            var hash = window.location.hash;
+            if(hash == ""){
+                alert("please set notebook id as url hash \n i2-dashboard.html#notebookID ");
+            }else{
+                var id = hash.substring(1);    
+                var iframes = document.querySelectorAll("iframe")
+                iframes.forEach(function(iframe){
+                    iframe.src = iframe.src.replace("${id}",id);
+
+                });
+            }
+          }
+          window.onload = load;
+    
+    </script>
+    <style>
+        body {}
+
+        .stats {
+            background-color: #BE1F2D;
+
+            width: 20% !important;
+            margin: 2%;
+            border-radius: 5px;
+            border: 2px solid rgba(37, 37, 41, 0.15);
+            color: #fff;
+        }
+
+        #side-nav {
+            width: 15%;
+            height: 100%;
+            background: #fff;
+            box-shadow: inset 0px 1px 14px 0px rgba(0, 0, 0, 0.12);
+        }
+
+        @media (max-width: 1600px) {
+            .container {
+                margin-right: inherit !important;
+            }
+        }
+    </style>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>i² Dashboard</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="style.css">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+
+    <nav class="navbar navbar-inverse navbar-fixed-top" id="side-nav" role="navigation">
+        <ul class="nav sidebar-nav">
+            <li class="sidebar-brand" style="background: #BE1F2D;box-shadow: inset 0px -2px 9px 0px rgba(109, 25, 25, 0.66);">
+
+                <a style="    color: #fff;">
+                    <h2>I² Dashboard</h2>
+                </a>
+
+            </li>
+
+
+        </ul>
+        <ul class="nav navbar-nav navbar-right" style="
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 0px;
+">
+<li>
+        <img src="TU-Logo.svg" style="width:100%">
+    </li>
+            <li>
+                <img src="BBDC.png" style="margin-top: 20px; width:100%">
+
+            </li>
+            <li>
+                <img src="dfki.jpg" style="margin-top: 20px; width:100%">
+            </li>
+            <li>
+                <img src="streamline_logo_3.png" style="margin-top: 20px; width:100%">
+            </li>
+            <li>
+                    <img src="Project_976.jpg" style="margin-top: 20px; width:100%;margin-left: 25%;">
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container" id="app">
+        <div class="page-header">
+            <h3>Statistics:</h3>
+        </div>
+        <div class="row">
+            <div class="col-md-3 stats" id="notebook">
+                <div>Current Timestamp:</div>
+                <iframe src="http://localhost:8080/#/notebook/${id}/paragraph/20160825-212323_2098054786?asIframe" width="200" height="20"
+                    frameBorder="0" scrolling="no"></iframe>
+
+
+            </div>
+            <div class="col-md-3 stats">
+                <div>Raw Data Stream:</div>
+                <iframe src="http://localhost:8080/#/notebook/${id}/paragraph/20161017-084811_339888826?asIframe" width="200" height="20"
+                    frameBorder="0" scrolling="no" frameBorder="0"></iframe>
+            </div>
+
+            <div class="col-md-3 stats">
+                <div>Linechart Result Stream:</div>
+
+                <iframe src="http://localhost:8080/#/notebook/${id}/paragraph/20161010-091419_1436431982?asIframe" width="200" height="20"
+                    frameBorder="0" scrolling="no" frameBorder="0"></iframe>
+            </div>
+            <div class="col-md-3 stats">
+                <div>Football field Result Stream:</div>
+                <iframe src="http://localhost:8080/#/notebook/${id}/paragraph/20161010-091903_1435461225?asIframe" width="200" height="20"
+                    frameBorder="0" scrolling="no" frameBorder="0"></iframe>
+            </div>
+
+
+
+
+        </div>
+
+
+        <div class="page-header">
+            <h3>Player Selection:</h3>
+        </div>
+        <iframe src="http://localhost:8080/#/notebook/${id}?paragraphId=20160810-181856_1882651917,20160825-193827_436061119&asIframe"
+            width="1000" height="160" frameBorder="0"></iframe>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="page-header">
+                    <h3>Linechart</h3>
+
+                </div>
+                <iframe src="http://localhost:8080/#/notebook/${id}?paragraphId=20160822-105407_1058249252&asIframe" width="150" height="70"
+                    scrolling="no" frameBorder="0"></iframe>
+                <iframe src="http://localhost:8080/#/notebook/${id}?paragraphId=20160824-160916_1475446458&asIframe" width="150" height="70"
+                    scrolling="no" frameBorder="0"></iframe>
+                <iframe src="http://localhost:8080/#/notebook/${id}?paragraphId=20160921-162019_1914899954,20160821-114515_1240706007&asIframe"
+                    width="600" height="350" frameBorder="0"></iframe>
+            </div>
+            <div class="col-md-6">
+                <div class="page-header">
+                    <h3>Live Football field:</h3>
+                </div>
+                <iframe src="http://localhost:8080/#/notebook/${id}?paragraphId=20160810-190348_1037428157,20160810-190726_872539191&asIframe"
+                    width="600" height="350" frameBorder="0"></iframe>
+            </div>
+        </div>
+    </div>
+    <!-- /.container -->
+
+</body>
+
+</html>
