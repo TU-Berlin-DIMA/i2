@@ -88,7 +88,14 @@ The I² demonstration has the following dependencies:
  5. Start Zeppelin:
     -   `./bin/zeppelin-daemon.sh start` 
 
-### visit [http://localhost:8080/](http://localhost:8080/)
+#### visit [http://localhost:8080/](http://localhost:8080/)
+
+### How to start the demo dashboard:
+We created a simple HTML dashboard, which combines the individual UI elements from the "Football dashboard" Zeppelin notebook. You can simply open the "i2-dashboard.html" in your browser.   
+**But you have to add the Zeppelin notebook ID as a hash parameter to the url.**   
+For example:  `i2-dashboard.html#<NotebookID>`
+
+
     
 
 ## Technical Overview:
