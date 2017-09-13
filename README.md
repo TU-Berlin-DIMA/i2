@@ -31,6 +31,7 @@ I² was first published at the 20th International Conference on Extending Databa
 ## I² at FlinkForward 2017
 We will present I² at [Flink Forward 2017 in Berlin](https://berlin.flink-forward.org/). The [I² session](https://berlin.flink-forward.org/kb_sessions/i²-interactive-real-time-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin/) took place on Tuesday, Sep. 12, 12:00.
 The [presentation is now available online](https://www.slideshare.net/powibol/i-interactive-realtime-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin-flink-forward-berlin-2017).
+Moreover, there is a [video recording available on YouTube](https://www.youtube.com/watch?v=JNbq239JkK4).
 
 ## Introduction
 This demonstration allows for exploring our interactive I² development environment.
