@@ -29,7 +29,7 @@ I² was first published at the 20th International Conference on Extending Databa
 ```
 
 ## I² at FlinkForward 2017
-We will present I² at [Flink Forward 2017 in Berlin](https://berlin.flink-forward.org/). The [I² session](https://berlin.flink-forward.org/kb_sessions/i²-interactive-real-time-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin/) took place on Tuesday, Sep. 12, 12:00.
+We presented I² at [Flink Forward 2017 in Berlin](https://berlin.flink-forward.org/). The [I² session](https://berlin.flink-forward.org/kb_sessions/i²-interactive-real-time-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin/) took place on Tuesday, Sep. 12, 12:00.
 The [presentation is now available online](https://www.slideshare.net/powibol/i-interactive-realtime-visualization-for-streaming-data-with-apache-flink-and-apache-zeppelin-flink-forward-berlin-2017).
 Moreover, there is a [video recording available on YouTube](https://www.youtube.com/watch?v=JNbq239JkK4).
 
@@ -39,7 +39,10 @@ You can test I² with several different examples. Each example is available as a
 
 Please notice that all notebooks require special Zeppelin features. Thus, **you must use our Zeppelin fork**. 
 
-All examples use the [DEBS 2013 Grand Challenge](http://dl.acm.org/citation.cfm?id=2488283) dataset, which has to be **stored in the Zeppelin root directory**. 
+All examples use the [DEBS 2013 Grand Challenge](http://dl.acm.org/citation.cfm?id=2488283) dataset, which has to be **stored in the Zeppelin root directory**.
+
+The Flink code is part of the respective Zeppelin Notebooks.
+Thus, you can find all our Flink operators included in the JSON files in the Notebooks directory.
 
 The following examples are provided:
 
@@ -52,6 +55,7 @@ The following examples are provided:
 |Late event demo		                    | This demonstration shows how we process data tuples arriving out of order. |
 |Line chart without I2 - crash demo     | This demo is used as motivation for the I² platform. It tries to aggregate the incoming data stream on the client side. This leads to an overload, causing an unresponsive browser tab. When you execute this demo, please be aware that you have to kill the browser tab manually. It will also be necessary to restart the Zeppelin server after the demo. |
 |Ball Possession | This notebook is based on the ball possession query from the [DEBS 2013 Grand Challenge](http://dl.acm.org/citation.cfm?id=2488283). It always highlights the player who is possesses the ball.|
+
 ## Setup:
 You can either build all dependencies on your own or use our pre-built Docker image.
 
